@@ -161,7 +161,6 @@ const Header = () => {
                       </NavLink>
                     </>
                   )}
-                  {/* Removed Help link for admin */}
                   <button onClick={toggleTheme} className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-white/10 w-full" role="menuitem" aria-label={`Toggle ${theme === 'light' ? 'Dark' : 'Light'} Mode`}>
                     <FontAwesomeIcon icon={theme === 'light' ? faMoon : faSun} aria-hidden="true" />
                     <span>{theme === 'light' ? 'Dark' : 'Light'} Mode</span>

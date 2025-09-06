@@ -9,7 +9,7 @@ const Orders = lazy(() => import('../pages/Orders'));
 const OrderDetails = lazy(() => import('../pages/OrderDetails'));
 const Payments = lazy(() => import('../pages/Payments'));
 const Profile = lazy(() => import('../pages/Profile'));
-const Help = lazy(() => import('../pages/Help'));
+// const Help = lazy(() => import('../pages/Help')); // REMOVED
 
 const VendorRoutes = () => {
   return (
@@ -26,7 +26,7 @@ const VendorRoutes = () => {
           <Route path="/orders/:orderId" element={<OrderDetails />} />
           <Route path="/payments" element={<Payments />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/help" element={<Help />} />
+          {/* <Route path="/help" element={<Help />} /> */} {/* REMOVED */}
           {/* Redirect any other logged-in vendor routes to dashboard */}
           <Route path="*" element={<Navigate to="/dashboard" />} />
         </Route>

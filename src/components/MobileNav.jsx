@@ -28,7 +28,6 @@ const MobileNav = () => {
     { name: 'Orders', path: '/admin-orders', icon: Receipt },
     { name: 'Stores', path: '/admin-stores', icon: Store },
     { name: 'Support', path: '/admin-support-tickets', icon: MessageSquareText }, // Admin Support link
-    // Removed Help link for admin
     { name: 'Logout', action: handleLogout, icon: LogOut, isLogout: true },
   ];
 
@@ -39,7 +38,6 @@ const MobileNav = () => {
     { name: 'Payments', path: '/payments', icon: CreditCard }, // Added Payments link for vendor
     { name: 'Profile', path: '/profile', icon: User },
     { name: 'My Tickets', path: '/profile?tab=tickets', icon: MessageSquareText }, // NEW: My Tickets link for vendor
-    { name: 'Help', path: '/help', icon: HelpCircle },
     { name: 'Logout', action: handleLogout, icon: LogOut, isLogout: true },
   ];
 
@@ -51,7 +49,6 @@ const MobileNav = () => {
     { name: 'Orders', path: '/orders', icon: Truck },
     { name: 'Profile', path: '/profile', icon: User },
     { name: 'My Tickets', path: '/profile?tab=tickets', icon: MessageSquareText }, // NEW: My Tickets link for customer
-    { name: 'Help', path: '/help', icon: HelpCircle },
     { name: 'Logout', action: handleLogout, icon: LogOut, isLogout: true },
   ];
 

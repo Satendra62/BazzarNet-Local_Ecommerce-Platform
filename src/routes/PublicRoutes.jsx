@@ -8,7 +8,7 @@ const Register = lazy(() => import('../pages/Register'));
 const Dashboard = lazy(() => import('../pages/Dashboard')); // LandingPage is rendered via Dashboard when not logged in
 const FAQ = lazy(() => import('../pages/FAQ'));
 const About = lazy(() => import('../pages/About'));
-const Help = lazy(() => import('../pages/Help'));
+// const Help = lazy(() => import('../pages/Help')); // REMOVED
 const ForgotPassword = lazy(() => import('../pages/ForgotPassword')); // Import new page
 const ResetPassword = lazy(() => import('../pages/ResetPassword')); // Import new page
 const Careers = lazy(() => import('../pages/Careers')); // NEW: Import Careers page
@@ -28,7 +28,7 @@ const PublicRoutes = () => {
           <Route path="/" element={<Dashboard />} /> {/* Landing page */}
           <Route path="/faq" element={<FAQ />} />
           <Route path="/about" element={<About />} />
-          <Route path="/help" element={<Help />} />
+          {/* <Route path="/help" element={<Help />} /> */} {/* REMOVED */}
           <Route path="/careers" element={<Careers />} /> {/* NEW: Careers route */}
           <Route path="/contact-us" element={<ContactUs />} /> {/* NEW: Contact Us route */}
           <Route path="/privacy-policy" element={<PrivacyPolicy />} /> {/* NEW: Privacy Policy route */}

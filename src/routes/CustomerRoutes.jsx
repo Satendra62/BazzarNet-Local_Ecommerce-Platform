@@ -17,7 +17,7 @@ const CustomerOrderDetails = lazy(() => import('../pages/CustomerOrderDetails'))
 const Profile = lazy(() => import('../pages/Profile'));
 const FAQ = lazy(() => import('../pages/FAQ'));
 const About = lazy(() => import('../pages/About'));
-const Help = lazy(() => import('../pages/Help'));
+// const Help = lazy(() => import('../pages/Help')); // REMOVED
 
 const CustomerRoutes = () => {
   return (
@@ -42,7 +42,7 @@ const CustomerRoutes = () => {
           <Route path="/profile" element={<Profile />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/about" element={<About />} />
-          <Route path="/help" element={<Help />} />
+          {/* <Route path="/help" element={<Help />} /> */} {/* REMOVED */}
           {/* Redirect any other logged-in customer routes to dashboard */}
           <Route path="*" element={<Navigate to="/dashboard" />} />
         </Route>
