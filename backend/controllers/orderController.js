@@ -8,13 +8,21 @@ import { generateOtp } from '../utils/helpers.js'; // Assuming a helper for OTP 
 import { sendEmail } from '../services/emailService.js';
 import env from '../config/env.js'; // Import env to use FRONTEND_URL
 import mongoose from 'mongoose'; // Import mongoose for transactions
+import Razorpay from 'razorpay'; // NEW: Import Razorpay for verification
+import crypto from 'crypto'; // NEW: Import crypto for signature verification
+
+// Initialize Razorpay instance for server-side verification
+const razorpayInstance = new Razorpay({
+  key_id: env.RAZORPAY_KEY_ID,
+  key_secret: env.RAZORPAY_KEY_SECRET,
+});
 
 // @desc    Place a new order (Customer)
 // @route   POST /api/orders
 // @access  Private/Customer
 const placeOrder = asyncHandler(async (req, res) => {
   console.log('Backend: placeOrder controller reached.'); // NEW LOG
-  const { items, shippingAddress, paymentMethod, totalPrice, appliedCoupon, transactionId } = req.body; // New: Get appliedCoupon and transactionId
+  const { items, shippingAddress, paymentMethod, totalPrice, appliedCoupon, transactionId, razorpayOrderId, razorpaySignature } = req.body; // New: Get appliedCoupon, transactionId, and Razorpay details
   console.log('Backend: Received items in req.body:', items); // ADDED LOG
 
   if (!items || items.length === 0) {
@@ -28,6 +36,33 @@ const placeOrder = asyncHandler(async (req, res) => {
   let createdOrder; // Declare createdOrder outside try block to be accessible later
 
   try {
+    // --- Razorpay Server-Side Verification (if paymentMethod is Razorpay) ---
+    if (paymentMethod === 'Razorpay') {
+      if (!razorpayOrderId || !transactionId || !razorpaySignature) {
+        res.status(400);
+        throw new Error('Razorpay payment details are missing for verification.');
+      }
+
+      const generatedSignature = crypto
+        .createHmac('sha256', env.RAZORPAY_KEY_SECRET)
+        .update(razorpayOrderId + '|' + transactionId)
+        .digest('hex');
+
+      if (generatedSignature !== razorpaySignature) {
+        res.status(400);
+        throw new Error('Razorpay payment verification failed: Invalid signature.');
+      }
+
+      // Optionally, fetch payment details from Razorpay to confirm status
+      // const paymentDetails = await razorpayInstance.payments.fetch(transactionId);
+      // if (paymentDetails.status !== 'captured') {
+      //   res.status(400);
+      //   throw new Error('Razorpay payment not captured.');
+      // }
+      console.log('Backend: Razorpay payment verified successfully on server-side.');
+    }
+    // --- End Razorpay Server-Side Verification ---
+
     // Extract product IDs from the incoming items
     const productIds = items.map(item => item.product);
 
@@ -100,7 +135,9 @@ const placeOrder = asyncHandler(async (req, res) => {
       paymentMethod,
       totalPrice,
       deliveryOtp: generateOtp(), // Generate OTP for delivery confirmation
-      transactionId: paymentMethod === 'UPI QR Payment' ? transactionId : undefined, // NEW: Assign transactionId for UPI QR Payment
+      transactionId: transactionId || (paymentMethod === 'Cash on Delivery' ? `COD-${Date.now()}` : undefined), // Assign transactionId for UPI QR Payment/Razorpay or generate for COD
+      razorpayOrderId: paymentMethod === 'Razorpay' ? razorpayOrderId : undefined, // NEW: Assign Razorpay Order ID
+      razorpaySignature: paymentMethod === 'Razorpay' ? razorpaySignature : undefined, // NEW: Assign Razorpay Signature
       // New: Store coupon details if applied
       coupon: appliedCoupon ? {
         code: appliedCoupon.code,
@@ -113,13 +150,15 @@ const placeOrder = asyncHandler(async (req, res) => {
     createdOrder = await order.save({ session }); // Save with session
 
     // NEW: Create a Payment record
-    const paymentStatus = (paymentMethod === 'Credit Card' || paymentMethod === 'UPI QR Payment') ? 'Paid' : 'Pending';
+    const paymentStatus = (paymentMethod === 'Credit Card' || paymentMethod === 'UPI QR Payment' || paymentMethod === 'Razorpay') ? 'Paid' : 'Pending';
     const payment = new Payment({
       order: createdOrder._id,
       vendor: store.owner, // Link to the store owner (vendor)
       amount: totalPrice,
       paymentMethod: paymentMethod,
       transactionId: transactionId || `COD-${createdOrder._id}`, // Use transactionId or generate one for COD
+      razorpayOrderId: paymentMethod === 'Razorpay' ? razorpayOrderId : undefined, // NEW: Assign Razorpay Order ID
+      razorpaySignature: paymentMethod === 'Razorpay' ? razorpaySignature : undefined, // NEW: Assign Razorpay Signature
       status: paymentStatus,
       customer: req.user._id,
     });

@@ -33,7 +33,7 @@ const OrderConfirmation = () => {
     );
   }
 
-  const { _id: orderId, totalPrice, items, deliveryOtp, createdAt, paymentMethod, transactionId, coupon, shippingAddress } = orderDetails; // NEW: Destructure shippingAddress
+  const { _id: orderId, totalPrice, items, deliveryOtp, createdAt, paymentMethod, transactionId, razorpayOrderId, coupon, shippingAddress } = orderDetails; // NEW: Destructure razorpayOrderId
 
   // Data to encode in QR code (e.g., order ID and OTP)
   const qrCodeValue = JSON.stringify({ orderId, deliveryOtp });
@@ -50,7 +50,8 @@ const OrderConfirmation = () => {
             <p className="mb-2"><strong>Order ID:</strong> {orderId}</p>
             <p className="mb-2"><strong>Order Date:</strong> {formatTimestamp(createdAt)}</p>
             <p className="mb-2"><strong>Payment Method:</strong> {paymentMethod}</p>
-            <p className="mb-4"><strong>Transaction ID:</strong> {transactionId || 'N/A'}</p>
+            {transactionId && <p className="mb-2"><strong>Transaction ID:</strong> {transactionId}</p>}
+            {razorpayOrderId && <p className="mb-4"><strong>Razorpay Order ID:</strong> {razorpayOrderId}</p>}
             <div className="mb-4">
                 <h4 className="font-semibold">Items:</h4>
                 <ul role="list">
@@ -84,7 +85,7 @@ const OrderConfirmation = () => {
         <div className="text-left max-w-md mx-auto bg-black/10 p-6 rounded-lg mt-8" aria-labelledby="shipping-address-heading">
             <h3 id="shipping-address-heading" className="text-xl font-semibold mb-4 border-b border-white/20 pb-2">Shipping Address</h3>
             <p>{shippingAddress.houseNo}, {shippingAddress.landmark ? shippingAddress.landmark + ', ' : ''}{shippingAddress.city}, {shippingAddress.state} - {shippingAddress.pinCode}</p>
-            <p>Mobile: {shippingAddress.mobile}</p> {/* NEW: Display mobile */}
+            <p>Mobile: {shippingAddress.mobile}</p>
         </div>
 
         {/* OTP and QR Code Section */}

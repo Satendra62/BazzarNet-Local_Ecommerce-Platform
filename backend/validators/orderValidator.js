@@ -35,18 +35,33 @@ const placeOrderSchema = Joi.object({
     'any.required': 'Order items are required.',
   }),
   shippingAddress: shippingAddressSchema.required(),
-  paymentMethod: Joi.string().valid('Credit Card', 'UPI', 'Cash on Delivery', 'UPI QR Payment').required().messages({ // NEW: Added 'UPI QR Payment'
+  paymentMethod: Joi.string().valid('Credit Card', 'UPI', 'Cash on Delivery', 'UPI QR Payment', 'Razorpay').required().messages({ // NEW: Added 'Razorpay'
     'any.only': 'Invalid payment method.',
     'any.required': 'Payment method is required.',
   }),
-  transactionId: Joi.string().when('paymentMethod', { // NEW: Conditionally require transactionId
-    is: 'UPI QR Payment',
-    then: Joi.string().pattern(/^[a-zA-Z0-9]{12}$/).required().messages({
-      'string.empty': 'Transaction ID is required for UPI QR Payment.',
-      'string.pattern.base': 'Transaction ID must be 12 alphanumeric characters.',
-      'any.required': 'Transaction ID is required for UPI QR Payment.',
+  transactionId: Joi.string().when('paymentMethod', { // Conditionally require transactionId for UPI QR Payment and Razorpay
+    is: Joi.valid('UPI QR Payment', 'Razorpay'),
+    then: Joi.string().required().messages({
+      'string.empty': 'Transaction ID is required for this payment method.',
+      'any.required': 'Transaction ID is required for this payment method.',
     }),
     otherwise: Joi.string().allow(null, ''), // Allow null or empty for other methods
+  }),
+  razorpayOrderId: Joi.string().when('paymentMethod', { // NEW: Conditionally require Razorpay Order ID
+    is: 'Razorpay',
+    then: Joi.string().required().messages({
+      'string.empty': 'Razorpay Order ID is required.',
+      'any.required': 'Razorpay Order ID is required.',
+    }),
+    otherwise: Joi.string().allow(null, ''),
+  }),
+  razorpaySignature: Joi.string().when('paymentMethod', { // NEW: Conditionally require Razorpay Signature
+    is: 'Razorpay',
+    then: Joi.string().required().messages({
+      'string.empty': 'Razorpay Signature is required.',
+      'any.required': 'Razorpay Signature is required.',
+    }),
+    otherwise: Joi.string().allow(null, ''),
   }),
   totalPrice: Joi.number().positive().required().messages({
     'number.base': 'Total price must be a number.',

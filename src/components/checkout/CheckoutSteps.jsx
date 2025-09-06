@@ -4,7 +4,7 @@ import { faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { motion } from 'framer-motion';
 
 const CheckoutSteps = ({ currentStep }) => {
-  const steps = ['Address', 'Coupon', 'Summary', 'Payment']; // New: Added 'Coupon' step
+  const steps = ['Address', 'Coupon', 'Summary', 'Payment']; // New: Added 'Payment' step
 
   return (
     <div className="flex justify-center items-center gap-4 mb-8 text-sm md:text-base">

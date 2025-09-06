@@ -44,12 +44,20 @@ const orderSchema = new mongoose.Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ['Credit Card', 'UPI', 'Cash on Delivery', 'UPI QR Payment'], // NEW: Added 'UPI QR Payment'
+    enum: ['Credit Card', 'UPI', 'Cash on Delivery', 'UPI QR Payment', 'Razorpay'], // NEW: Added 'Razorpay'
     required: true,
   },
-  transactionId: { // For payment gateway reference
+  transactionId: { // For payment gateway reference (e.g., Razorpay Payment ID)
     type: String,
-    sparse: true, // Not required for COD, but now required for UPI QR Payment
+    sparse: true, // Not required for COD, but now required for UPI QR Payment and Razorpay
+  },
+  razorpayOrderId: { // NEW: Store Razorpay Order ID
+    type: String,
+    sparse: true,
+  },
+  razorpaySignature: { // NEW: Store Razorpay Signature for verification
+    type: String,
+    sparse: true,
   },
   totalPrice: {
     type: Number,

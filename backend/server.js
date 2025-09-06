@@ -26,6 +26,7 @@ import uploadRoutes from "./routes/uploadRoutes.js";
 import passwordResetRoutes from "./routes/passwordResetRoutes.js";
 import supportRoutes from "./routes/supportRoutes.js";
 import couponRoutes from "./routes/couponRoutes.js";
+import razorpayRoutes from "./routes/razorpayRoutes.js"; // NEW: Import Razorpay routes
 
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 import { authLimiter, passwordResetLimiter } from "./middleware/rateLimitMiddleware.js"; // New: Import rate limiters
@@ -105,6 +106,7 @@ app.use("/api/upload", uploadRoutes);
 app.use("/api/password-reset", passwordResetLimiter, passwordResetRoutes); // Apply passwordResetLimiter
 app.use("/api/support", supportRoutes);
 app.use("/api/coupons", couponRoutes);
+app.use("/api/razorpay", razorpayRoutes); // NEW: Use Razorpay routes
 
 // Serve static uploads (no longer needed if using Cloudinary, but kept for local fallback)
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));

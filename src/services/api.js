@@ -176,3 +176,8 @@ export const coupon = {
   getAll: () => apiRequest('/coupons'),
   validate: (code, totalPrice) => apiRequest('/coupons/validate', { method: 'POST', body: JSON.stringify({ code, totalPrice }) }),
 };
+
+// NEW: Razorpay API endpoints
+export const razorpay = {
+  createOrder: (amount, currency = 'INR') => apiRequest('/razorpay/create-order', { method: 'POST', body: JSON.stringify({ amount, currency }) }),
+};
