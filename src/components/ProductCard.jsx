@@ -84,7 +84,7 @@ const ProductCard = ({ product }) => {
           className="bg-white/10 text-[var(--text)] border-none py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 text-sm font-medium hover:bg-white/20 transition-all duration-300"
           onClick={() => addToWishlist(product)}
           aria-label={`Add ${product.name} to wishlist`}
-          disabled={isInWishlist} {/* NEW: Disable if already in wishlist */}
+          disabled={isInWishlist} /* NEW: Disable if already in wishlist */
         >
           <FontAwesomeIcon icon={faHeart} aria-hidden="true" />
         </button>
