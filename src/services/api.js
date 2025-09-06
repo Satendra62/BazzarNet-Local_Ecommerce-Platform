@@ -123,6 +123,7 @@ export const customer = {
 };
 
 // --- Admin ---
+// --- Admin ---
 export const admin = {
   getDashboardStats: () => apiRequest('/admin/dashboard/stats'),
   getUsers: (params = {}) => apiRequest(`/admin/users${buildQuery(params)}`),
@@ -132,13 +133,22 @@ export const admin = {
   updateProduct: (productId, productData) => apiRequest(`/admin/products/${productId}`, { method: 'PUT', body: JSON.stringify(productData) }),
   deleteProduct: (productId) => apiRequest(`/admin/products/${productId}`, { method: 'DELETE' }),
   getOrders: (params = {}) => apiRequest(`/admin/orders${buildQuery(params)}`),
-  updateOrderStatus: (orderId, status) => apiRequest(`/orders/${orderId}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
+  updateOrderStatus: (orderId, statusData) => apiRequest(`/orders/${orderId}/status`, { method: 'PUT', body: JSON.stringify(statusData) }),
   initiateRefund: (orderId) => apiRequest(`/admin/orders/${orderId}/refund`, { method: 'POST' }),
   updateStore: (storeId, storeData) => apiRequest(`/admin/stores/${storeId}`, { method: 'PUT', body: JSON.stringify(storeData) }),
   deleteStore: (storeId) => apiRequest(`/admin/stores/${storeId}`, { method: 'DELETE' }),
-  getSupportTickets: (params = {}) => apiRequest(`/admin/support${buildQuery(params)}`), // Corrected endpoint
-  updateSupportTicketStatus: (ticketId, statusData) => apiRequest(`/admin/support/${ticketId}/status`, { method: 'PUT', body: JSON.stringify(statusData) }), // Corrected endpoint
+
+  // ✅ Fixed: fetch support tickets
+  getSupportTickets: ({ search = '', status = '' } = {}) => {
+    const query = buildQuery({ search, status });
+    return apiRequest(`/support/admin${query}`);
+  },
+
+  // ✅ Fixed: update ticket status
+  updateSupportTicketStatus: (ticketId, statusData) =>
+    apiRequest(`/support/admin/${ticketId}/status`, { method: 'PUT', body: JSON.stringify(statusData) }),
 };
+
 
 // --- Upload ---
 export const upload = {
