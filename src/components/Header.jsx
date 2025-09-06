@@ -87,7 +87,8 @@ const Header = () => {
 
         <div className="flex items-center gap-4">
           {!isVendor && !isAdmin && (
-            <div className="hidden md:flex items-center gap-4 border border-white/20 rounded-full px-4 py-2">
+            // Removed 'hidden md:flex' to make it visible on all screen sizes
+            <div className="flex items-center gap-4 border border-white/20 rounded-full px-4 py-2">
               <NavLink to="/cart" className="relative text-[var(--text)] hover:text-[var(--accent)] transition-colors duration-200" aria-label={`Shopping Cart with ${cartItemCount} items`}>
                 <FontAwesomeIcon icon={faShoppingCart} className="text-xl" />
                 {cartItemCount > 0 && (

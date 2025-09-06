@@ -8,7 +8,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Users, Package, Receipt, Store, ShoppingBag, Heart, Truck, User, Home, 
-  HelpCircle, LogOut, ShoppingCart as LucideShoppingCart, CreditCard, MessageSquareText // Added CreditCard for vendor payments, MessageSquareText for admin support
+  HelpCircle, LogOut, CreditCard, MessageSquareText // Removed LucideShoppingCart and Heart as they are now in Header
 } from 'lucide-react'; // Import Lucide icons
 
 const MobileNav = () => {
@@ -47,8 +47,7 @@ const MobileNav = () => {
     { name: 'Dashboard', path: '/dashboard', icon: Home },
     { name: 'Products', path: '/products', icon: ShoppingBag },
     { name: 'Stores', path: '/stores', icon: Store },
-    { name: 'Cart', path: '/cart', icon: LucideShoppingCart },
-    { name: 'Wishlist', path: '/wishlist', icon: Heart },
+    // Removed Cart and Wishlist from here as they are now in the main Header
     { name: 'Orders', path: '/orders', icon: Truck },
     { name: 'Profile', path: '/profile', icon: User },
     { name: 'My Tickets', path: '/profile?tab=tickets', icon: MessageSquareText }, // NEW: My Tickets link for customer
