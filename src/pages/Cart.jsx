@@ -54,7 +54,7 @@ const Cart = () => {
                         className="bg-white/10 text-[var(--text)] border-none py-2 px-4 rounded-lg flex items-center gap-2 font-medium hover:bg-white/20 transition-all duration-300"
                         onClick={() => moveToWishlist(item)}
                         aria-label={`Move ${item.name} to wishlist`}
-                        disabled={isInWishlist} {/* NEW: Disable if already in wishlist */}
+                        disabled={isInWishlist} 
                       >
                         <FontAwesomeIcon icon={faHeart} aria-hidden="true" /> Move to Wishlist
                       </button>
