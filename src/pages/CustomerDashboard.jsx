@@ -83,6 +83,7 @@ const CustomerDashboard = () => {
     { icon: faShoppingBag, label: 'Items in Cart', value: cart.length, path: '/cart' },
     { icon: faHeart, label: 'Wishlisted Items', value: wishlist.length, path: '/wishlist' },
     { icon: faReceipt, label: 'Total Orders', value: orders.filter(order => order.user === user?._id).length, path: '/orders' },
+    { icon: faPenFancy, label: 'Products to Review', value: pendingReviews.length, path: '/orders' }, // NEW CARD
   ];
 
   const sortedCategories = useMemo(() => {
@@ -128,7 +129,8 @@ const CustomerDashboard = () => {
             <h1 className="text-3xl font-bold mb-2">Welcome back, {user?.name}!</h1>
             <p className="text-lg text-[var(--text)] opacity-80 mb-8">Ready to shop from your favorite local stores?</p>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            {/* UPDATED GRID LAYOUT */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
               {stats.map(stat => (
                 <div key={stat.label} onClick={() => navigate(stat.path)} className="bg-black/10 p-6 rounded-xl flex items-center gap-4 cursor-pointer hover:bg-white/20 transition-colors duration-300" role="button" tabIndex="0" aria-label={`${stat.label}: ${stat.value}. Click to view.`}>
                   <FontAwesomeIcon icon={stat.icon} className="text-3xl text-[var(--accent)]" aria-hidden="true" />
