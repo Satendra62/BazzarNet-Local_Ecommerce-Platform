@@ -43,7 +43,7 @@ const useWishlist = (isLoggedIn, user, isVendor, isAdmin, addToCart, fetchCart) 
     try {
       const response = await api.customer.removeFromWishlist(productId);
       setWishlist(response);
-      toast.error(`Item removed from wishlist.`);
+      toast.success(`Item removed from wishlist.`); // FIXED: Changed to toast.success
     } catch (error) {
       toast.error(`Error removing from wishlist: ${error.message}`);
     }

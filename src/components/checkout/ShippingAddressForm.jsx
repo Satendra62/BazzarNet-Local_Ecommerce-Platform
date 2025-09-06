@@ -1,7 +1,8 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { faChevronRight, faChevronLeft } from '@fortawesome/free-solid-svg-icons'; // Import faChevronLeft
 import { ChevronDown } from 'lucide-react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 const indianStates = [
   "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
@@ -15,6 +16,8 @@ const indianStates = [
 const inputClasses = "w-full p-2 rounded-lg bg-white/10 border border-black/30 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] text-[var(--text)] text-base md:text-lg";
 
 const ShippingAddressForm = ({ address, errors, handleChange, onNextStep }) => {
+  const navigate = useNavigate(); // Initialize useNavigate
+
   return (
     <div className="flex flex-col gap-4 max-w-[500px] mx-auto" role="form" aria-labelledby="address-heading">
       <h3 id="address-heading" className="text-2xl font-bold mb-2 text-center">Shipping Address</h3>
@@ -117,14 +120,24 @@ const ShippingAddressForm = ({ address, errors, handleChange, onNextStep }) => {
         {errors?.mobile && <p id="mobile-error" className="text-red-400 text-xs mt-1">{errors.mobile}</p>}
       </div>
       
-      <button
-        type="button"
-        onClick={onNextStep}
-        className="bg-[var(--accent)] text-white border-none py-3 px-6 rounded-lg flex items-center justify-center w-full gap-2 font-medium hover:bg-[var(--accent-dark)] transition-all duration-300 mt-4"
-        aria-label="Proceed to Order Summary"
-      >
-        Proceed to Summary <FontAwesomeIcon icon={faChevronRight} aria-hidden="true" />
-      </button>
+      <div className="flex justify-between gap-4 mt-4"> {/* NEW: Container for buttons */}
+        <button
+          type="button"
+          onClick={() => navigate('/cart')} // Navigate back to cart
+          className="bg-white/10 text-[var(--text)] border-none py-3 px-6 rounded-lg flex items-center justify-center w-full gap-2 font-medium hover:bg-white/20 transition-all duration-300 flex-1"
+          aria-label="Back to Cart"
+        >
+          <FontAwesomeIcon icon={faChevronLeft} aria-hidden="true" /> Back to Cart
+        </button>
+        <button
+          type="button"
+          onClick={onNextStep}
+          className="bg-[var(--accent)] text-white border-none py-3 px-6 rounded-lg flex items-center justify-center w-full gap-2 font-medium hover:bg-[var(--accent-dark)] transition-all duration-300 flex-1"
+          aria-label="Proceed to Summary"
+        >
+          Proceed to Summary <FontAwesomeIcon icon={faChevronRight} aria-hidden="true" />
+        </button>
+      </div>
     </div>
   );
 };

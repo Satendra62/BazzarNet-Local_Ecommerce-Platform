@@ -112,7 +112,7 @@ export const customer = {
   removeFromCart: (itemId) => apiRequest(`/cart/${itemId}`, { method: 'DELETE' }),
   getWishlist: () => apiRequest('/wishlist'),
   addToWishlist: (productId, unit) => apiRequest('/wishlist', { method: 'POST', body: JSON.stringify({ productId, unit }) }),
-  removeFromWishlist: (productId) => apiRequest('/wishlist/${productId}', { method: 'DELETE' }),
+  removeFromWishlist: (productId) => apiRequest(`/wishlist/${productId}`, { method: 'DELETE' }), // FIXED: Changed to backticks
   placeOrder: (orderData) => apiRequest('/orders', { method: 'POST', body: JSON.stringify(orderData) }),
   getOrders: (userId, params = {}) => apiRequest(`/orders/user/${userId}${buildQuery(params)}`),
   getOrderById: (orderId) => apiRequest(`/orders/${orderId}`),
