@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import { AppContext } from '../context/AppContext';
 import useFormValidation from '../hooks/useFormValidation';
 import * as api from '../services/api';
-import { Mail, MessageSquareText } from 'lucide-react';
+import { Mail, MessageSquareText, Loader2 } from 'lucide-react'; // ADDED Loader2 here
 
 const inputClasses = "w-full p-2 rounded-lg bg-white/10 border border-black/30 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] text-[var(--text)]";
 
