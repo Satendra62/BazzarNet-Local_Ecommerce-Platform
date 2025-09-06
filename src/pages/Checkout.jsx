@@ -51,8 +51,8 @@ const Checkout = () => {
 
   // NEW: Initialize Razorpay hook - Corrected destructuring
   const [openRazorpayCheckout, closeRazorpayCheckout] = useRazorpay({
-    key_id: import.meta.env.VITE_RAZORPAY_KEY_ID, // Replace with your Razorpay Key ID from .env
-    key_secret: import.meta.env.VITE_RAZORPAY_KEY_SECRET, // Replace with your Razorpay Key Secret from .env
+    key_id: import.meta.env.VITE_RAZORPAY_KEY_ID, // Only pass key_id to the frontend hook
+    // key_secret: import.meta.env.VITE_RAZORPAY_KEY_SECRET, // REMOVED: key_secret should NOT be on frontend
   });
 
   // Effect to update shippingAddress if user.address in context changes
