@@ -14,7 +14,7 @@ export default defineConfig({
     setupFiles: './src/setupTests.js',
     css: false, // Disable CSS processing for tests
     coverage: {
-      provider: 'v8', // or 'istanbul'
+      provider: 'v8', // Changed from 'c8' to 'v8'
       reporter: ['text', 'json', 'html'],
       exclude: [
         'node_modules/',
