@@ -12,7 +12,7 @@ const Stores = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 4; // Number of stores per page
+  const itemsPerPage = 8; // Number of stores per page - INCREASED FROM 4 TO 8
 
   useEffect(() => {
     const loadData = async () => {
@@ -31,8 +31,8 @@ const Stores = () => {
       loadData();
     } else {
       setLoading(false); // If no pincode, stop loading and show message
-      setAppStores([]); // Clear stores if no pincode
-      setAppStoresMeta({ page: 1, pages: 1, count: 0 });
+      // setAppStores([]); // Clear stores if no pincode - Removed as fetchAppStores already handles this
+      // setAppStoresMeta({ page: 1, pages: 1, count: 0 }); // Removed as fetchAppStores already handles this
     }
   }, [searchTerm, currentPage, fetchAppStores, userPincode]);
 
