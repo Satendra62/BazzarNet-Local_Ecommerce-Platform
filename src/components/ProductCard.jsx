@@ -7,13 +7,16 @@ import placeholderImage from '../assets/placeholder.png';
 import { getFullImageUrl } from '../utils/imageUtils';
 
 const ProductCard = ({ product }) => {
-  const { addToCart, addToWishlist, appStores } = useContext(AppContext);
+  const { addToCart, addToWishlist, appStores, wishlist } = useContext(AppContext); // NEW: Get wishlist from context
 
   const isOutOfStock = product.stock === 0;
   const discount = product.originalPrice && product.originalPrice > product.price
     ? ((product.originalPrice - product.price) / product.originalPrice) * 100
     : 0;
   const storeName = appStores.find(store => store._id === product.store?._id)?.name || 'N/A';
+
+  // NEW: Check if product is already in wishlist
+  const isInWishlist = wishlist.some(item => item.product._id === product._id);
 
   const renderStars = (rating) => {
     const fullStars = Math.floor(rating);
@@ -81,6 +84,7 @@ const ProductCard = ({ product }) => {
           className="bg-white/10 text-[var(--text)] border-none py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 text-sm font-medium hover:bg-white/20 transition-all duration-300"
           onClick={() => addToWishlist(product)}
           aria-label={`Add ${product.name} to wishlist`}
+          disabled={isInWishlist} {/* NEW: Disable if already in wishlist */}
         >
           <FontAwesomeIcon icon={faHeart} aria-hidden="true" />
         </button>

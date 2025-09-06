@@ -144,6 +144,9 @@ const Checkout = () => {
   const initiateRazorpayPayment = async () => {
     setIsRazorpayLoading(true);
     try {
+      // Log the Razorpay Key ID to verify it's being picked up
+      console.log('Razorpay Key ID from .env:', import.meta.env.VITE_RAZORPAY_KEY_ID);
+
       // 1. Create an order on your backend
       const razorpayOrder = await api.razorpay.createOrder(finalTotal);
 

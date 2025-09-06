@@ -7,7 +7,7 @@ import placeholderImage from '../assets/placeholder.png'; // Import placeholder 
 import { getFullImageUrl } from '../utils/imageUtils'; // Import utility
 
 const Cart = () => {
-  const { cart, removeFromCart, updateCartQuantity, moveToWishlist } = useContext(AppContext);
+  const { cart, removeFromCart, updateCartQuantity, moveToWishlist, wishlist } = useContext(AppContext); // NEW: Get wishlist from context
   const navigate = useNavigate();
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -27,43 +27,48 @@ const Cart = () => {
         ) : (
           <>
             <div className="grid grid-cols-1 gap-4" role="list">
-              {cart.map((item) => (
-                <div key={item.product._id} className="bg-[var(--card-bg)] backdrop-blur-[5px] border border-white/30 rounded-2xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4" role="listitem" aria-label={`Item: ${item.name}, Price: ₹${item.price.toFixed(2)}, Quantity: ${item.quantity}`}>
-                  <div className="flex items-center gap-4">
-                    <img 
-                      src={getFullImageUrl(item.image)} 
-                      alt={item.name} 
-                      className="w-20 h-20 object-cover rounded-lg" 
-                      onError={(e) => { e.target.onerror = null; e.target.src = placeholderImage; }} // Fallback image
-                    />
-                    <div>
-                      <h3 className="text-xl font-semibold">{item.name}</h3>
-                      <p className="text-base">₹{item.price.toFixed(2)} / {item.unit}</p> {/* Display unit */}
+              {cart.map((item) => {
+                // NEW: Check if product is already in wishlist
+                const isInWishlist = wishlist.some(wishlistItem => wishlistItem.product._id === item.product._id);
+                return (
+                  <div key={item.product._id} className="bg-[var(--card-bg)] backdrop-blur-[5px] border border-white/30 rounded-2xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4" role="listitem" aria-label={`Item: ${item.name}, Price: ₹${item.price.toFixed(2)}, Quantity: ${item.quantity}`}>
+                    <div className="flex items-center gap-4">
+                      <img 
+                        src={getFullImageUrl(item.image)} 
+                        alt={item.name} 
+                        className="w-20 h-20 object-cover rounded-lg" 
+                        onError={(e) => { e.target.onerror = null; e.target.src = placeholderImage; }} // Fallback image
+                      />
+                      <div>
+                        <h3 className="text-xl font-semibold">{item.name}</h3>
+                        <p className="text-base">₹{item.price.toFixed(2)} / {item.unit}</p> {/* Display unit */}
+                      </div>
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-center gap-4 mt-4 md:mt-0">
+                      <div className="flex items-center gap-2">
+                          <button onClick={() => updateCartQuantity(item.product._id, item.quantity - 1)} className="w-8 h-8 rounded-full bg-[var(--accent)] text-white font-bold" aria-label={`Decrease quantity of ${item.name}`}>-</button>
+                          <span aria-live="polite" aria-atomic="true">{item.quantity}</span>
+                          <button onClick={() => updateCartQuantity(item.product._id, item.quantity + 1)} className="w-8 h-8 rounded-full bg-[var(--accent)] text-white font-bold" aria-label={`Increase quantity of ${item.name}`}>+</button>
+                      </div>
+                      <button
+                        className="bg-white/10 text-[var(--text)] border-none py-2 px-4 rounded-lg flex items-center gap-2 font-medium hover:bg-white/20 transition-all duration-300"
+                        onClick={() => moveToWishlist(item)}
+                        aria-label={`Move ${item.name} to wishlist`}
+                        disabled={isInWishlist} {/* NEW: Disable if already in wishlist */}
+                      >
+                        <FontAwesomeIcon icon={faHeart} aria-hidden="true" /> Move to Wishlist
+                      </button>
+                      <button
+                        className="bg-red-500 text-white border-none py-2 px-4 rounded-lg font-medium hover:bg-red-600 transition-all duration-300"
+                        onClick={() => removeFromCart(item.product._id)}
+                        aria-label={`Remove ${item.name} from cart`}
+                      >
+                        Remove
+                      </button>
                     </div>
                   </div>
-                  <div className="flex flex-col sm:flex-row items-center gap-4 mt-4 md:mt-0">
-                    <div className="flex items-center gap-2">
-                        <button onClick={() => updateCartQuantity(item.product._id, item.quantity - 1)} className="w-8 h-8 rounded-full bg-[var(--accent)] text-white font-bold" aria-label={`Decrease quantity of ${item.name}`}>-</button>
-                        <span aria-live="polite" aria-atomic="true">{item.quantity}</span>
-                        <button onClick={() => updateCartQuantity(item.product._id, item.quantity + 1)} className="w-8 h-8 rounded-full bg-[var(--accent)] text-white font-bold" aria-label={`Increase quantity of ${item.name}`}>+</button>
-                    </div>
-                    <button
-                      className="bg-white/10 text-[var(--text)] border-none py-2 px-4 rounded-lg flex items-center gap-2 font-medium hover:bg-white/20 transition-all duration-300"
-                      onClick={() => moveToWishlist(item)}
-                      aria-label={`Move ${item.name} to wishlist`}
-                    >
-                      <FontAwesomeIcon icon={faHeart} aria-hidden="true" /> Move to Wishlist
-                    </button>
-                    <button
-                      className="bg-red-500 text-white border-none py-2 px-4 rounded-lg font-medium hover:bg-red-600 transition-all duration-300"
-                      onClick={() => removeFromCart(item.product._id)}
-                      aria-label={`Remove ${item.name} from cart`}
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             <div className="mt-5 border-t border-white/20 pt-5 flex flex-col md:flex-row justify-between items-center">
               <p className="text-lg font-bold">Total: ₹{total.toFixed(2)}</p>
