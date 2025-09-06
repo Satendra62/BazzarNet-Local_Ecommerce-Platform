@@ -102,7 +102,7 @@ const getRecommendedProducts = asyncHandler(async (req, res) => {
   const products = await Product.aggregate([
     { $match: query }, // Apply pincode filter here
     { $sample: { size: 6 } }, // Get 6 random products
-    { $project: { name: 1, image: 1, price: 1, originalPrice: 1, store: 1, unit: 1, category: 1, rating: 1, numReviews: 1 } } // Select relevant fields including unit and review data
+    { $project: { name: 1, image: 1, price: 1, originalPrice: 1, store: 1, unit: 1, category: 1, rating: 1, numReviews: 1, stock: 1 } } // Select relevant fields including unit, review data, and STOCK
   ]);
   res.json(products);
 });
