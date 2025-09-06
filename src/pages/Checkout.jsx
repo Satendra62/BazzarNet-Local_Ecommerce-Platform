@@ -12,7 +12,6 @@ import { useRazorpay } from 'react-razorpay'; // NEW: Import useRazorpay hook
 import CheckoutSteps from '../components/checkout/CheckoutSteps';
 import ShippingAddressForm from '../components/checkout/ShippingAddressForm';
 import OrderSummary from '../components/checkout/OrderSummary';
-import QrPaymentForm from '../components/checkout/QrPaymentForm';
 import CouponSection from '../components/checkout/CouponSection';
 import RazorpayPaymentForm from '../components/checkout/RazorpayPaymentForm'; // NEW: Import RazorpayPaymentForm
 
@@ -22,7 +21,7 @@ const Checkout = () => {
   const { cart, checkout, user, appliedCoupon, discountAmount, updateUserInContext } = useContext(AppContext);
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState('address');
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('UPI QR Payment'); // NEW: State for selected payment method
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('Razorpay'); // Changed: Default to Razorpay
 
   // Initialize shippingAddress from user profile, ensuring a deep copy
   const [shippingAddress, setShippingAddress] = useState(() => {
@@ -41,18 +40,17 @@ const Checkout = () => {
 
   const [addressErrors, setAddressErrors] = useState({});
 
-  // State for QR/UPI payment form
-  const [qrPaymentFormData, setQrPaymentFormData] = useState({
-    transactionId: '',
-  });
-  const [qrPaymentErrors, setQrPaymentErrors] = useState({});
+  // Removed: State for QR/UPI payment form
+  // Removed: [qrPaymentFormData, setQrPaymentFormData] = useState({ transactionId: '' });
+  // Removed: [qrPaymentErrors, setQrPaymentErrors] = useState({});
+  
   const [isRazorpayLoading, setIsRazorpayLoading] = useState(false); // NEW: Loading state for Razorpay initiation
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const finalTotal = subtotal - discountAmount;
 
-  // NEW: Initialize Razorpay hook
-  const { open: openRazorpayCheckout, close: closeRazorpayCheckout } = useRazorpay({
+  // NEW: Initialize Razorpay hook - Corrected destructuring
+  const [openRazorpayCheckout, closeRazorpayCheckout] = useRazorpay({
     key_id: import.meta.env.VITE_RAZORPAY_KEY_ID, // Replace with your Razorpay Key ID from .env
     key_secret: import.meta.env.VITE_RAZORPAY_KEY_SECRET, // Replace with your Razorpay Key Secret from .env
   });
@@ -73,11 +71,8 @@ const Checkout = () => {
     setShippingAddress(prev => ({ ...prev, [name]: value }));
   };
 
-  // Handler for QR/UPI form changes
-  const handleQrPaymentChange = (e) => {
-    const { name, value } = e.target;
-    setQrPaymentFormData(prev => ({ ...prev, [name]: value }));
-  };
+  // Removed: Handler for QR/UPI form changes
+  // Removed: const handleQrPaymentChange = (e) => { ... };
 
   // Validation functions for each step
   const validateAddress = () => {
@@ -107,17 +102,8 @@ const Checkout = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Validation for QR/UPI payment form
-  const validateQrPaymentForm = () => {
-    let newErrors = {};
-    if (!qrPaymentFormData.transactionId.trim()) {
-      newErrors.transactionId = 'Transaction ID is required.';
-    } else if (!/^[a-zA-Z0-9]{12}$/.test(qrPaymentFormData.transactionId.trim())) { // Example: 12-digit alphanumeric
-      newErrors.transactionId = 'Transaction ID must be 12 alphanumeric characters.';
-    }
-    setQrPaymentErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  // Removed: Validation for QR/UPI payment form
+  // Removed: const validateQrPaymentForm = () => { ... };
 
   const handleNextStep = async () => {
     if (currentStep === 'address') {
@@ -231,33 +217,14 @@ const Checkout = () => {
       appliedCoupon: appliedCoupon,
     };
 
-    if (selectedPaymentMethod === 'UPI QR Payment') {
-      if (!validateQrPaymentForm()) {
-        toast.error('Please correct the errors in the UPI QR Payment form.');
-        return;
-      }
-      orderPayload = {
-        ...orderPayload,
-        paymentMethod: 'UPI QR Payment',
-        transactionId: qrPaymentFormData.transactionId,
-      };
-    } else if (selectedPaymentMethod === 'Razorpay') {
-      // Payment details come from Razorpay handler
-      orderPayload = {
-        ...orderPayload,
-        paymentMethod: 'Razorpay',
-        transactionId: paymentDetails.transactionId,
-        razorpayOrderId: paymentDetails.razorpayOrderId,
-        razorpaySignature: paymentDetails.razorpaySignature,
-      };
-    } else {
-      // Default to Cash on Delivery if no other method is selected or handled
-      orderPayload = {
-        ...orderPayload,
-        paymentMethod: 'Cash on Delivery',
-        transactionId: `COD-${Date.now()}`, // Generate a unique ID for COD
-      };
-    }
+    // Only Razorpay payment method is active
+    orderPayload = {
+      ...orderPayload,
+      paymentMethod: 'Razorpay',
+      transactionId: paymentDetails.transactionId,
+      razorpayOrderId: paymentDetails.razorpayOrderId,
+      razorpaySignature: paymentDetails.razorpaySignature,
+    };
     
     console.log('Order details prepared for API call:', orderPayload);
     const newOrder = await checkout(orderPayload);
@@ -355,85 +322,26 @@ const Checkout = () => {
               <div className="max-w-[500px] mx-auto">
                 <h3 className="text-2xl font-bold mb-4 text-center">Select Payment Method</h3>
                 <div className="bg-black/10 p-6 rounded-xl mb-6">
-                  <div className="space-y-4">
-                    <label className="flex items-center p-3 rounded-lg bg-white/5 hover:bg-white/10 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="UPI QR Payment"
-                        checked={selectedPaymentMethod === 'UPI QR Payment'}
-                        onChange={() => setSelectedPaymentMethod('UPI QR Payment')}
-                        className="form-radio h-4 w-4 text-[var(--accent)] focus:ring-[var(--accent)]"
-                      />
-                      <span className="ml-3 text-lg font-medium">UPI QR Payment</span>
-                    </label>
-                    <label className="flex items-center p-3 rounded-lg bg-white/5 hover:bg-white/10 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="Razorpay"
-                        checked={selectedPaymentMethod === 'Razorpay'}
-                        onChange={() => setSelectedPaymentMethod('Razorpay')}
-                        className="form-radio h-4 w-4 text-[var(--accent)] focus:ring-[var(--accent)]"
-                      />
-                      <span className="ml-3 text-lg font-medium">Razorpay</span>
-                    </label>
-                    <label className="flex items-center p-3 rounded-lg bg-white/5 hover:bg-white/10 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="Cash on Delivery"
-                        checked={selectedPaymentMethod === 'Cash on Delivery'}
-                        onChange={() => setSelectedPaymentMethod('Cash on Delivery')}
-                        className="form-radio h-4 w-4 text-[var(--accent)] focus:ring-[var(--accent)]"
-                      />
-                      <span className="ml-3 text-lg font-medium">Cash on Delivery</span>
-                    </label>
-                  </div>
+                  <label className="flex items-center p-3 rounded-lg bg-white/5 hover:bg-white/10 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="Razorpay"
+                      checked={selectedPaymentMethod === 'Razorpay'}
+                      onChange={() => setSelectedPaymentMethod('Razorpay')}
+                      className="form-radio h-4 w-4 text-[var(--accent)] focus:ring-[var(--accent)]"
+                      disabled // Disable to ensure it's always selected
+                    />
+                    <span className="ml-3 text-lg font-medium">Razorpay</span>
+                  </label>
                 </div>
 
-                {selectedPaymentMethod === 'UPI QR Payment' && (
-                  <QrPaymentForm
-                    formData={qrPaymentFormData}
-                    errors={qrPaymentErrors}
-                    handleChange={handleQrPaymentChange}
-                    onPreviousStep={handlePreviousStep}
-                    onPlaceOrder={handlePlaceOrder}
-                  />
-                )}
-                {selectedPaymentMethod === 'Razorpay' && (
-                  <RazorpayPaymentForm
-                    onPreviousStep={handlePreviousStep}
-                    onInitiateRazorpayPayment={initiateRazorpayPayment}
-                    isLoading={isRazorpayLoading}
-                  />
-                )}
-                {selectedPaymentMethod === 'Cash on Delivery' && (
-                  <div className="flex flex-col gap-4 max-w-[500px] mx-auto">
-                    <div className="bg-black/10 p-6 rounded-xl text-center">
-                      <p className="text-lg font-semibold mb-3">You have selected Cash on Delivery.</p>
-                      <p className="text-sm opacity-80">Please have the exact amount ready at the time of delivery.</p>
-                    </div>
-                    <div className="flex justify-between gap-4 mt-6">
-                      <button
-                        type="button"
-                        onClick={handlePreviousStep}
-                        className="bg-white/10 text-[var(--text)] border-none py-3 px-6 rounded-lg flex items-center justify-center gap-2 font-medium hover:bg-white/20 transition-all duration-300 flex-1"
-                        aria-label="Go back to Order Summary"
-                      >
-                        <FontAwesomeIcon icon={faChevronLeft} aria-hidden="true" /> Back
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handlePlaceOrder({ paymentMethod: 'Cash on Delivery' })}
-                        className="bg-[var(--accent)] text-white border-none py-3 px-6 rounded-lg flex items-center justify-center w-full gap-2 font-medium hover:bg-[var(--accent-dark)] transition-all duration-300 flex-1"
-                        aria-label="Place Order with Cash on Delivery"
-                      >
-                        Place Order
-                      </button>
-                    </div>
-                  </div>
-                )}
+                {/* Only render Razorpay form */}
+                <RazorpayPaymentForm
+                  onPreviousStep={handlePreviousStep}
+                  onInitiateRazorpayPayment={initiateRazorpayPayment}
+                  isLoading={isRazorpayLoading}
+                />
               </div>
             </motion.div>
           )}
