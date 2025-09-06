@@ -10,7 +10,7 @@ export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localho
 const getAuthToken = () => {
   const user = JSON.parse(localStorage.getItem('user'));
   const token = user?.token || null;
-  console.log('Frontend: getAuthToken returning:', token ? 'Token present' : 'No token');
+  // console.log('Frontend: getAuthToken returning:', token ? 'Token present' : 'No token'); // Removed excessive logging
   return token;
 };
 
@@ -31,11 +31,26 @@ const apiRequest = async (endpoint, options = {}) => {
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
+    // console.log(`Frontend: Sending token for ${endpoint}: Bearer ${token.substring(0, 10)}...`); // Log first 10 chars of token
+  } else {
+    // console.log(`Frontend: No token for ${endpoint}`);
   }
 
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
+    
     if (!response.ok) {
+      // Explicitly handle 401 Unauthorized errors
+      if (response.status === 401) {
+        console.error(`Frontend: 401 Unauthorized for ${endpoint}. Token might be expired or invalid.`);
+        // Trigger a logout to clear local storage and redirect.
+        // This assumes a global logout function is available or can be imported.
+        // For now, we'll re-throw and let the calling context handle the logout.
+        // In a real app, you might have a global event or context method to force logout.
+        // For this setup, useAuth's useEffect already handles auto-logout on /users/me 401.
+        // For other 401s, we'll just show an error toast.
+      }
+
       let errorData;
       try {
         errorData = await response.json();
@@ -50,9 +65,8 @@ const apiRequest = async (endpoint, options = {}) => {
     return response.json();
   } catch (error) {
     console.error(`API Request Failed for ${endpoint}:`, error);
-    if (error.message.includes('Unauthorized') || error.message.includes('token failed')) {
-      // Optional: implement logout handling here
-    }
+    // The useAuth hook's useEffect already handles auto-logout if /users/me fails.
+    // For other API calls, we just re-throw the error to be caught by the specific hook/component.
     throw error;
   }
 };
@@ -112,7 +126,7 @@ export const customer = {
   removeFromCart: (itemId) => apiRequest(`/cart/${itemId}`, { method: 'DELETE' }),
   getWishlist: () => apiRequest('/wishlist'),
   addToWishlist: (productId, unit) => apiRequest('/wishlist', { method: 'POST', body: JSON.stringify({ productId, unit }) }),
-  removeFromWishlist: (productId) => apiRequest(`/wishlist/${productId}`, { method: 'DELETE' }), // FIXED: Changed to backticks
+  removeFromWishlist: (productId) => apiRequest(`/wishlist/${productId}`, { method: 'DELETE' }),
   placeOrder: (orderData) => apiRequest('/orders', { method: 'POST', body: JSON.stringify(orderData) }),
   getOrders: (userId, params = {}) => apiRequest(`/orders/user/${userId}${buildQuery(params)}`),
   getOrderById: (orderId) => apiRequest(`/orders/${orderId}`),
