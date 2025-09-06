@@ -6,7 +6,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import * as api from '../services/api'; // Import API service
-import { useRazorpay } from 'react-razorpay'; // NEW: Import useRazorpay hook
+// Removed: import { useRazorpay } from 'react-razorpay'; // No longer using this hook
 
 // Import modular components
 import CheckoutSteps from '../components/checkout/CheckoutSteps';
@@ -17,12 +17,23 @@ import RazorpayPaymentForm from '../components/checkout/RazorpayPaymentForm'; //
 
 const VALID_PINCODE = '825301'; // Define the valid pincode
 
+// Helper function to dynamically load the Razorpay script
+const loadRazorpayScript = (src) => {
+  return new Promise((resolve) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
 const Checkout = () => {
   const { cart, checkout, user, appliedCoupon, discountAmount, updateUserInContext } = useContext(AppContext);
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState('address');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('Razorpay'); // Changed: Default to Razorpay
-
+  
   // Initialize shippingAddress from user profile, ensuring a deep copy
   const [shippingAddress, setShippingAddress] = useState(() => {
     if (user?.address) {
@@ -39,21 +50,15 @@ const Checkout = () => {
   });
 
   const [addressErrors, setAddressErrors] = useState({});
-
-  // Removed: State for QR/UPI payment form
-  // Removed: [qrPaymentFormData, setQrPaymentFormData] = useState({ transactionId: '' });
-  // Removed: [qrPaymentErrors, setQrPaymentErrors] = useState({});
-  
   const [isRazorpayLoading, setIsRazorpayLoading] = useState(false); // NEW: Loading state for Razorpay initiation
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const finalTotal = subtotal - discountAmount;
 
-  // NEW: Initialize Razorpay hook - Corrected destructuring
-  const [openRazorpayCheckout, closeRazorpayCheckout] = useRazorpay({
-    key_id: import.meta.env.VITE_RAZORPAY_KEY_ID, // Only pass key_id to the frontend hook
-    // key_secret: import.meta.env.VITE_RAZORPAY_KEY_SECRET, // REMOVED: key_secret should NOT be on frontend
-  });
+  // Dynamically load Razorpay script on component mount
+  useEffect(() => {
+    loadRazorpayScript('https://checkout.razorpay.com/v1/checkout.js');
+  }, []);
 
   // Effect to update shippingAddress if user.address in context changes
   useEffect(() => {
@@ -70,9 +75,6 @@ const Checkout = () => {
     const { name, value } = e.target;
     setShippingAddress(prev => ({ ...prev, [name]: value }));
   };
-
-  // Removed: Handler for QR/UPI form changes
-  // Removed: const handleQrPaymentChange = (e) => { ... };
 
   // Validation functions for each step
   const validateAddress = () => {
@@ -101,9 +103,6 @@ const Checkout = () => {
     setAddressErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
-  // Removed: Validation for QR/UPI payment form
-  // Removed: const validateQrPaymentForm = () => { ... };
 
   const handleNextStep = async () => {
     if (currentStep === 'address') {
@@ -148,8 +147,16 @@ const Checkout = () => {
       // 1. Create an order on your backend
       const razorpayOrder = await api.razorpay.createOrder(finalTotal);
 
-      // 2. Open Razorpay checkout
-      const options = {
+      // 2. Ensure Razorpay script is loaded and global Razorpay object is available
+      if (!window.Razorpay) {
+        const loaded = await loadRazorpayScript('https://checkout.razorpay.com/v1/checkout.js');
+        if (!loaded) {
+          throw new Error('Razorpay SDK failed to load.');
+        }
+      }
+
+      // 3. Create a new Razorpay instance
+      const rzp = new window.Razorpay({
         key: import.meta.env.VITE_RAZORPAY_KEY_ID, // Your Razorpay Key ID
         amount: razorpayOrder.amount * 100, // Amount in paise
         currency: razorpayOrder.currency,
@@ -178,9 +185,10 @@ const Checkout = () => {
         theme: {
           color: '#22D3EE', // Your accent color
         },
-      };
+      });
 
-      openRazorpayCheckout(options);
+      // 4. Open the Razorpay checkout
+      rzp.open();
 
     } catch (error) {
       console.error('Error initiating Razorpay payment:', error);
