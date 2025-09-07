@@ -52,9 +52,11 @@ const useWishlist = (isLoggedIn, user, isVendor, isAdmin, addToCart, fetchCart) 
   const moveToCart = useCallback(async (product) => {
     if (!isLoggedIn || !user?._id) return;
     try {
-      await addToCart(product);
       // When moving from wishlist, 'product' is actually the wishlist 'item' object
-      // So, we need to access the nested product._id for removal
+      // So, we need to pass the nested product object to addToCart
+      await addToCart(product.product); // Pass the actual product object to addToCart
+      
+      // Then remove from wishlist using the actual product ID
       await removeFromWishlist(product.product._id); 
       fetchWishlist(); // Re-fetch wishlist to ensure UI is updated
     } catch (error) {
