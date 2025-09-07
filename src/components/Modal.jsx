@@ -56,7 +56,8 @@ const Modal = ({ isOpen, onClose, title, children }) => {
                 <FontAwesomeIcon icon={faTimes} size="lg" aria-hidden="true" />
               </button>
             </div>
-            <div className="p-6">
+            {/* This div will now handle scrolling if content is too tall */}
+            <div className="p-6 max-h-[80vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900">
               {children}
             </div>
           </motion.div>
