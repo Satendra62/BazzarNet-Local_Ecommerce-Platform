@@ -1,16 +1,33 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { AppContext } from '../context/AppContext';
-import ProductCard from '../components/ProductCard'; // Import the new ProductCard component
-import SkeletonCard from '../components/SkeletonCard'; // Import SkeletonCard
+import ProductCard from '../components/ProductCard';
+import SkeletonCard from '../components/SkeletonCard';
+import useProducts from '../hooks/useProducts'; // NEW: Import useProducts hook
 
 const StorePage = () => {
-  const { allAppProducts, appStores } = useContext(AppContext);
+  const { appStores, userPincode } = useContext(AppContext);
   const { storeId } = useParams();
+  const { fetchProductsForStore } = useProducts(); // NEW: Use the new hook function
+  const [storeProducts, setStoreProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+
   const store = appStores.find(s => s._id === storeId);
 
-  // Filter products for the current store
-  const storeProducts = allAppProducts.filter(product => product.store._id === storeId);
+  useEffect(() => {
+    const loadStoreProducts = async () => {
+      if (!storeId) return;
+      setLoadingProducts(true);
+      const params = {
+        pincode: userPincode, // Pass user's active pincode for filtering
+      };
+      const { products } = await fetchProductsForStore(storeId, params);
+      setStoreProducts(products);
+      setLoadingProducts(false);
+    };
+
+    loadStoreProducts();
+  }, [storeId, userPincode, fetchProductsForStore]); // Re-fetch when storeId or pincode changes
 
   if (!store) {
     return (
@@ -23,10 +40,6 @@ const StorePage = () => {
     );
   }
 
-  // Assuming loading state for products is handled by allAppProducts loading,
-  // or we could add a specific loading state for store products if needed.
-  const loading = allAppProducts.length === 0; // Simple loading check
-
   return (
     <section className="w-full max-w-[1200px] my-10">
       <div className="bg-[var(--card-bg)] backdrop-blur-[5px] border border-white/30 rounded-2xl p-8 mx-4">
@@ -36,7 +49,7 @@ const StorePage = () => {
         </div>
         
         <h3 className="text-2xl font-bold mb-6">Products</h3>
-        {loading ? (
+        {loadingProducts ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
             {[...Array(3)].map((_, index) => ( // Show a few skeleton cards
               <SkeletonCard key={index} className="w-full" />

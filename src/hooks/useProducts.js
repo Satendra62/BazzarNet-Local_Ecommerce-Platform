@@ -20,6 +20,17 @@ const useProducts = () => {
     }
   }, []);
 
+  // NEW: Function to fetch products for a specific store
+  const fetchProductsForStore = useCallback(async (storeId, params = {}) => {
+    try {
+      const { products, page, pages, count } = await api.products.getProductsByStore(storeId, params);
+      return { products, page, pages, count };
+    } catch (error) {
+      toast.error(`Failed to load products for store: ${error.message}`);
+      return { products: [], page: 1, pages: 1, count: 0 };
+    }
+  }, []);
+
   const fetchRecommendedProducts = useCallback(async (pincode = undefined) => { // NEW: Accept pincode
     setRecommendedLoading(true);
     try {
@@ -41,6 +52,7 @@ const useProducts = () => {
     allAppProducts,
     allAppProductsMeta,
     fetchAllProducts,
+    fetchProductsForStore, // NEW: Expose the new function
     recommendedProducts,
     recommendedLoading,
     fetchRecommendedProducts,
