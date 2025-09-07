@@ -1,20 +1,8 @@
 import multer from 'multer';
-import path from 'path';
-import { fileURLToPath } from 'url';
+// Removed path and fileURLToPath as they are no longer needed for disk storage
 
-// Fix __dirname for ES Modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Set storage engine
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, '../uploads/')); // Save to backend/uploads
-  },
-  filename: function (req, file, cb) {
-    cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
-  },
-});
+// Set storage engine to memoryStorage
+const storage = multer.memoryStorage(); // Store files in memory as a Buffer
 
 // Check file type to allow only images (Multer's fileFilter)
 function checkFileType(file, cb) {
