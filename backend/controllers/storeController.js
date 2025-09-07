@@ -13,8 +13,7 @@ const getAllStores = asyncHandler(async (req, res) => {
 
   let query = { isActive: true }; // Only active stores
 
-  // Enforce VALID_PINCODE if a specific (valid) pincode is requested,
-  // or if no pincode is specified (default to the valid one).
+  // Only apply pincode filter if it's explicitly provided in the query
   if (req.query.pincode) {
     if (req.query.pincode !== VALID_PINCODE) {
       // If an invalid pincode is provided, return no stores
@@ -22,10 +21,9 @@ const getAllStores = asyncHandler(async (req, res) => {
     }
     // If valid pincode is provided, filter by it
     query['address.pinCode'] = VALID_PINCODE;
-  } else {
-    // If no pincode is provided in the query, default to filtering by VALID_PINCODE
-    query['address.pinCode'] = VALID_PINCODE;
   }
+  // If req.query.pincode is NOT provided, do NOT add a pincode filter to the query.
+  // This allows admins or general browsing (without a set pincode) to see all stores.
 
   const keyword = req.query.search
     ? {

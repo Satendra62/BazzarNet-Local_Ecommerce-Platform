@@ -13,7 +13,9 @@ const ProductCard = ({ product }) => {
   const discount = product.originalPrice && product.originalPrice > product.price
     ? ((product.originalPrice - product.price) / product.originalPrice) * 100
     : 0;
-  const storeName = appStores.find(store => store._id === product.store?._id)?.name || 'N/A';
+  
+  // Prioritize product.store.name if populated, otherwise fallback to appStores lookup
+  const storeName = product.store?.name || appStores.find(store => store._id === product.store?._id)?.name || 'N/A';
 
   // NEW: Check if product is already in wishlist
   const isInWishlist = wishlist.some(item => item.product._id === product._id);
