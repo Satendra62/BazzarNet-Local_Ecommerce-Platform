@@ -67,6 +67,8 @@ const useCart = (isLoggedIn, user, isVendor, isAdmin) => {
 
     // Check if cart is not empty and if the new product is from a different store
     if (cart.length > 0) {
+      console.log('DEBUG Frontend: Cart is not empty. Inspecting cart[0].product:', cart[0].product);
+      console.log('DEBUG Frontend: Inspecting cart[0].product.store:', cart[0].product.store);
       const currentCartStoreId = cart[0].product.store._id;
       if (newProductStoreId.toString() !== currentCartStoreId.toString()) {
         toast.custom((t) => (

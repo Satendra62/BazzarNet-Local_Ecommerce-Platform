@@ -63,7 +63,16 @@ const addItemToWishlist = asyncHandler(async (req, res) => {
   }
 
   await wishlist.save();
-  const updatedWishlist = await Wishlist.findById(wishlist._id).populate('items.product', 'name price image stock unit');
+  // Ensure deep population when returning the updated wishlist
+  const updatedWishlist = await Wishlist.findById(wishlist._id)
+    .populate({
+      path: 'items.product',
+      select: 'name price image stock unit store',
+      populate: {
+        path: 'store',
+        select: 'name _id',
+      }
+    });
   res.status(201).json(updatedWishlist.items);
 });
 
@@ -104,7 +113,16 @@ const removeItemFromWishlist = asyncHandler(async (req, res) => {
   }
 
   await wishlist.save();
-  const updatedWishlist = await Wishlist.findById(wishlist._id).populate('items.product', 'name price image stock unit');
+  // Ensure deep population when returning the updated wishlist
+  const updatedWishlist = await Wishlist.findById(wishlist._id)
+    .populate({
+      path: 'items.product',
+      select: 'name price image stock unit store',
+      populate: {
+        path: 'store',
+        select: 'name _id',
+      }
+    });
   res.json(updatedWishlist.items);
 });
 
