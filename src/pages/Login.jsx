@@ -361,7 +361,7 @@ const Login = () => {
         </p>
         {/* NEW: Back to Home link */}
         <p className="text-center text-sm mt-4">
-          <Link to="/" className="text-[var(--accent)] font-semibold">← Back to Home</Link>
+          <Link to="/" className="text-[var(--accent)] font-semibold ">Back to Home</Link>
         </p>
       </div>
     </div>

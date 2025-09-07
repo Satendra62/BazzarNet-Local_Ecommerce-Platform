@@ -26,36 +26,39 @@ const getAllProducts = asyncHandler(async (req, res) => {
     ? { category: req.query.category }
     : {};
 
-  let storeFilter = {};
+  let finalQuery = { ...keyword, ...categoryFilter };
+
+  // Handle store filter
   if (req.query.store && req.query.store !== 'all') {
-    console.log('Backend: getAllProducts - Value of req.query.store:', req.query.store);
-    // Validate if req.query.store is a valid ObjectId before using it in the query
     if (!mongoose.Types.ObjectId.isValid(req.query.store)) {
       res.status(400);
-      throw new Error('Invalid store ID format provided.'); // More specific error
+      throw new Error('Invalid store ID format provided.');
     }
-    storeFilter = { store: req.query.store };
-  } else {
-    console.log('Backend: getAllProducts - Not filtering by store. req.query.store is:', req.query.store);
+    finalQuery.store = req.query.store; // Start with specific store filter
   }
 
-  // NEW: Pincode filtering logic
-  let pincodeStoreIds = [];
+  // Handle pincode filter
   if (req.query.pincode) {
     const storesInPincode = await Store.find({ 'address.pinCode': req.query.pincode, isActive: true }).select('_id');
-    pincodeStoreIds = storesInPincode.map(store => store._id);
+    const pincodeStoreIds = storesInPincode.map(store => store._id);
     
     if (pincodeStoreIds.length === 0) {
-      // If no stores found for the pincode, return empty products array
+      // If no stores found for the pincode, no products can be returned
       return res.json({ products: [], page: 1, pages: 0, count: 0 });
     }
-  }
 
-  const finalQuery = { ...keyword, ...categoryFilter, ...storeFilter };
-
-  // Apply pincode filter if present
-  if (req.query.pincode) {
-    finalQuery.store = { $in: pincodeStoreIds };
+    if (finalQuery.store) {
+      // If a specific store was already filtered, ensure it's also in the pincode list
+      // If the specific store is NOT in the pincode list, return no products
+      if (!pincodeStoreIds.some(id => id.equals(finalQuery.store))) {
+        return res.json({ products: [], page: 1, pages: 0, count: 0 });
+      }
+      // If it is, the specific store filter (finalQuery.store = req.query.store) is sufficient.
+      // No need to modify finalQuery.store further.
+    } else {
+      // If no specific store was filtered, apply the pincode filter as an $in operator
+      finalQuery.store = { $in: pincodeStoreIds };
+    }
   }
 
   console.log('Backend: getAllProducts - Final Query:', finalQuery);
