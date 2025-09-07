@@ -359,6 +359,10 @@ const Login = () => {
         <p className="text-center text-sm mt-2">
           <Link to="/forgot-password" className="text-[var(--accent)] font-semibold">Forgot Password?</Link>
         </p>
+        {/* NEW: Back to Home link */}
+        <p className="text-center text-sm mt-4">
+          <Link to="/" className="text-[var(--accent)] font-semibold">← Back to Home</Link>
+        </p>
       </div>
     </div>
   );
