@@ -211,7 +211,7 @@ const LandingPage = () => {
                   <FontAwesomeIcon icon={faCheckCircle} className="text-5xl text-[var(--accent)]" />
                 </motion.div>
                 <h3 className="text-2xl font-bold text-[var(--accent)] mb-2">Enjoy & Review</h3>
-                <p className className="text-[var(--text)] text-lg">Receive your order and share your feedback.</p>
+                <p className="text-[var(--text)] text-lg">Receive your order and share your feedback.</p>
               </motion.div>
             </div>
           </div>
