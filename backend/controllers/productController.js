@@ -86,23 +86,43 @@ const getProductById = asyncHandler(async (req, res) => {
 // @route   GET /api/products/recommended
 // @access  Public
 const getRecommendedProducts = asyncHandler(async (req, res) => {
-  // NEW: Pincode filtering for recommended products
   let query = {};
   if (req.query.pincode) {
     const storesInPincode = await Store.find({ 'address.pinCode': req.query.pincode, isActive: true }).select('_id');
     const pincodeStoreIds = storesInPincode.map(store => store._id);
     if (pincodeStoreIds.length === 0) {
-      return res.json([]); // No recommended products if no stores in pincode
+      return res.json([]);
     }
     query.store = { $in: pincodeStoreIds };
   }
 
-  // For demo purposes, return a random selection of products
-  // In a real app, this would involve recommendation logic
   const products = await Product.aggregate([
-    { $match: query }, // Apply pincode filter here
-    { $sample: { size: 6 } }, // Get 6 random products
-    { $project: { name: 1, image: 1, price: 1, originalPrice: 1, store: 1, unit: 1, category: 1, rating: 1, numReviews: 1, stock: 1 } } // Select relevant fields including unit, review data, and STOCK
+    { $match: query },
+    { $sample: { size: 6 } },
+    // NEW: Add $lookup to populate store details
+    {
+      $lookup: {
+        from: 'stores', // The collection name for Store model
+        localField: 'store',
+        foreignField: '_id',
+        as: 'store',
+      },
+    },
+    { $unwind: '$store' }, // Deconstructs the array field from the $lookup operation
+    { $project: { 
+        name: 1, 
+        image: 1, 
+        price: 1, 
+        originalPrice: 1, 
+        unit: 1, 
+        category: 1, 
+        rating: 1, 
+        numReviews: 1, 
+        stock: 1,
+        'store._id': 1, // Include store ID
+        'store.name': 1, // Include store name
+      } 
+    }
   ]);
   res.json(products);
 });
