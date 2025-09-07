@@ -26,25 +26,100 @@ const useCart = (isLoggedIn, user, isVendor, isAdmin) => {
     fetchCart();
   }, [fetchCart]);
 
+  const clearCart = useCallback(async () => {
+    if (!isLoggedIn || !user?._id) return;
+    try {
+      await api.customer.clearCart();
+      setCart([]);
+      toast.success('Your cart has been cleared.');
+    } catch (error) {
+      toast.error(`Error clearing cart: ${error.message}`);
+    }
+  }, [isLoggedIn, user?._id]);
+
   const addToCart = useCallback(async (product) => {
     if (!isLoggedIn || !user?._id) {
       toast.error('Please log in to add items to your cart.');
       return;
     }
-    try {
-      // Determine the actual product ID and unit.
-      // If 'product' is a wishlist item (which has a nested 'product' object), use item.product._id and item.product.unit
-      // Otherwise, assume 'product' is a direct product object.
-      const actualProductId = product.product?._id || product._id;
-      const actualUnit = product.product?.unit || product.unit;
 
+    // Determine the actual product ID and store ID
+    const actualProductId = product.product?._id || product._id;
+    const newProductStoreId = product.product?.store?._id || product.store?._id;
+    const actualUnit = product.product?.unit || product.unit;
+    const productName = product.product?.name || product.name;
+
+    if (!newProductStoreId) {
+      toast.error('Could not determine store for this product.');
+      return;
+    }
+
+    // Check if cart is not empty and if the new product is from a different store
+    if (cart.length > 0) {
+      const currentCartStoreId = cart[0].product.store._id;
+      if (newProductStoreId.toString() !== currentCartStoreId.toString()) {
+        toast.custom((t) => (
+          <div
+            className={`${
+              t.visible ? 'animate-enter' : 'animate-leave'
+            } max-w-md w-full bg-[var(--card-bg)] shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
+          >
+            <div className="flex-1 w-0 p-4">
+              <div className="flex items-start">
+                <div className="flex-shrink-0 pt-0.5">
+                  <svg className="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.102 3.377 1.752 3.377h14.092c1.65 0 2.615-1.877 1.752-3.377L13.5 1.12a1.875 1.875 0 00-3 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                  </svg>
+                </div>
+                <div className="ml-3 flex-1">
+                  <p className="text-sm font-medium text-[var(--text)]">
+                    Items from a different store detected!
+                  </p>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Your cart already contains items from another store. Do you want to clear your cart and add "{productName}"?
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="flex border-l border-gray-200">
+              <button
+                onClick={async () => {
+                  toast.dismiss(t.id);
+                  await clearCart();
+                  try {
+                    const response = await api.customer.addToCart(actualProductId, 1, actualUnit);
+                    setCart(response.items);
+                    toast.success(`${productName} added to cart!`);
+                  } catch (error) {
+                    toast.error(`Error adding to cart: ${error.message}`);
+                  }
+                }}
+                className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-[var(--accent)] hover:text-[var(--accent-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              >
+                Clear Cart & Add
+              </button>
+              <button
+                onClick={() => toast.dismiss(t.id)}
+                className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ), { duration: Infinity }); // Keep toast open until action is taken
+        return; // Stop further execution
+      }
+    }
+
+    // If cart is empty or product is from the same store, proceed to add
+    try {
       const response = await api.customer.addToCart(actualProductId, 1, actualUnit);
       setCart(response.items);
-      toast.success(`${product.name} added to cart!`);
+      toast.success(`${productName} added to cart!`);
     } catch (error) {
       toast.error(`Error adding to cart: ${error.message}`);
     }
-  }, [isLoggedIn, user?._id]);
+  }, [isLoggedIn, user?._id, cart, clearCart]);
 
   const removeFromCart = useCallback(async (productId) => {
     if (!isLoggedIn || !user?._id) return;
@@ -107,7 +182,8 @@ const useCart = (isLoggedIn, user, isVendor, isAdmin) => {
     removeFromCart,
     updateCartQuantity,
     checkout,
-    setCart // Expose setCart for external updates if needed (e.g., after login)
+    setCart, // Expose setCart for external updates if needed (e.g., after login)
+    clearCart, // Expose clearCart
   };
 };
 

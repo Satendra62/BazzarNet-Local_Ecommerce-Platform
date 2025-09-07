@@ -6,7 +6,7 @@ import Product from '../models/Product.js';
 // @route   GET /api/cart
 // @access  Private
 const getCart = asyncHandler(async (req, res) => {
-  const cart = await Cart.findOne({ user: req.user._id }).populate('items.product', 'name price image stock unit'); // NEW: Populate unit
+  const cart = await Cart.findOne({ user: req.user._id }).populate('items.product', 'name price image stock unit store'); // NEW: Populate store to check for single-store cart logic
 
   if (cart) {
     res.json(cart); // Return the full cart object, including items array
@@ -66,7 +66,7 @@ const addItemToCart = asyncHandler(async (req, res) => {
   }
 
   await cart.save();
-  const updatedCart = await Cart.findById(cart._id).populate('items.product', 'name price image stock unit'); // NEW: Populate unit
+  const updatedCart = await Cart.findById(cart._id).populate('items.product', 'name price image stock unit store'); // NEW: Populate store
   res.status(201).json(updatedCart);
 });
 
@@ -105,7 +105,7 @@ const updateCartItemQuantity = asyncHandler(async (req, res) => {
     }
     cart.items[itemIndex].quantity = quantity;
     await cart.save();
-    const updatedCart = await Cart.findById(cart._id).populate('items.product', 'name price image stock unit'); // NEW: Populate unit
+    const updatedCart = await Cart.findById(cart._id).populate('items.product', 'name price image stock unit store'); // NEW: Populate store
     res.json(updatedCart);
   } else {
     res.status(404);
@@ -138,8 +138,16 @@ const removeItemFromCart = asyncHandler(async (req, res) => {
   }
 
   await cart.save();
-  const updatedCart = await Cart.findById(cart._id).populate('items.product', 'name price image stock unit'); // NEW: Populate unit
+  const updatedCart = await Cart.findById(cart._id).populate('items.product', 'name price image stock unit store'); // NEW: Populate store
   res.json(updatedCart);
 });
 
-export { getCart, addItemToCart, updateCartItemQuantity, removeItemFromCart };
+// @desc    Clear all items from cart
+// @route   DELETE /api/cart/all
+// @access  Private
+const clearCart = asyncHandler(async (req, res) => {
+  await Cart.deleteOne({ user: req.user._id });
+  res.json({ message: 'Cart cleared successfully' });
+});
+
+export { getCart, addItemToCart, updateCartItemQuantity, removeItemFromCart, clearCart };

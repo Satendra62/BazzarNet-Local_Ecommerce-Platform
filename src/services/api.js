@@ -125,6 +125,7 @@ export const customer = {
   addToCart: (productId, quantity = 1, unit) => apiRequest('/cart', { method: 'POST', body: JSON.stringify({ productId, quantity, unit }) }),
   updateCartItem: (itemId, quantity) => apiRequest(`/cart/${itemId}`, { method: 'PUT', body: JSON.stringify({ quantity }) }),
   removeFromCart: (itemId) => apiRequest(`/cart/${itemId}`, { method: 'DELETE' }),
+  clearCart: () => apiRequest('/cart/all', { method: 'DELETE' }), // NEW: Added clearCart
   getWishlist: () => apiRequest('/wishlist'),
   addToWishlist: (productId, unit) => apiRequest('/wishlist', { method: 'POST', body: JSON.stringify({ productId, unit }) }),
   removeFromWishlist: (productId) => apiRequest(`/wishlist/${productId}`, { method: 'DELETE' }),

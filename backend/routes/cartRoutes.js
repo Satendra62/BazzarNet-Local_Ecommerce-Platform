@@ -1,6 +1,6 @@
 import express from 'express';
 import { protect, authorizeRoles } from '../middleware/authMiddleware.js';
-import { getCart, addItemToCart, updateCartItemQuantity, removeItemFromCart } from '../controllers/cartController.js';
+import { getCart, addItemToCart, updateCartItemQuantity, removeItemFromCart, clearCart } from '../controllers/cartController.js';
 import { validate } from '../middleware/validationMiddleware.js';
 import Joi from 'joi';
 
@@ -43,5 +43,8 @@ router.route('/')
 router.route('/:productId')
   .put(validate(updateCartItemQuantitySchema), updateCartItemQuantity)
   .delete(removeItemFromCart);
+
+// New route to clear the entire cart
+router.delete('/all', clearCart);
 
 export default router;
