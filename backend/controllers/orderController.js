@@ -242,6 +242,179 @@ const placeOrder = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    Get customer's orders
+// @route   GET /api/orders/user/:userId
+// @access  Private/Customer
+const getCustomerOrders = asyncHandler(async (req, res) => {
+  const pageSize = Number(req.query.limit) || 10;
+  const page = Number(req.query.page) || 1;
+
+  let query = { user: req.user._id }; // Ensure only logged-in user's orders are fetched
+
+  if (req.query.search) {
+    query.$or = [
+      { _id: { $regex: req.query.search, $options: 'i' } },
+      { 'items.name': { $regex: req.query.search, $options: 'i' } },
+    ];
+  }
+
+  const count = await Order.countDocuments(query);
+  const orders = await Order.find(query)
+    .populate('store', 'name')
+    .sort({ createdAt: -1 })
+    .limit(pageSize)
+    .skip(pageSize * (page - 1));
+
+  res.json({ orders, page, pages: Math.ceil(count / pageSize), count });
+});
+
+// @desc    Get a single order by ID (Customer, Vendor, Admin)
+// @route   GET /api/orders/:id
+// @access  Private
+const getOrderById = asyncHandler(async (req, res) => {
+  const order = await Order.findById(req.params.id)
+    .populate('user', 'name email') // Populate customer info
+    .populate('store', 'name'); // Populate store info
+
+  if (!order) {
+    res.status(404);
+    throw new Error('Order not found');
+  }
+
+  // Authorization check: Ensure user is owner, vendor of store, or admin
+  if (
+    order.user._id.toString() !== req.user._id.toString() && // Not the customer
+    order.store.owner.toString() !== req.user._id.toString() && // Not the vendor
+    req.user.role !== 'admin' // Not an admin
+  ) {
+    res.status(403);
+    throw new Error('Not authorized to view this order.');
+  }
+
+  res.json(order);
+});
+
+// @desc    Get vendor's orders
+// @route   GET /api/orders/store/:storeId
+// @access  Private/Vendor
+const getVendorOrders = asyncHandler(async (req, res) => {
+  const { storeId } = req.params;
+  const pageSize = Number(req.query.limit) || 10;
+  const page = Number(req.query.page) || 1;
+
+  // Ensure the logged-in user is the owner of the store they are requesting orders for
+  if (req.user.storeId.toString() !== storeId) {
+    res.status(403);
+    throw new Error('Not authorized to view orders for this store.');
+  }
+
+  let query = { store: storeId };
+
+  if (req.query.status && req.query.status !== 'all') {
+    query.orderStatus = req.query.status;
+  }
+  if (req.query.search) {
+    query.$or = [
+      { _id: { $regex: req.query.search, $options: 'i' } },
+      { customerName: { $regex: req.query.search, $options: 'i' } },
+      { customerEmail: { $regex: req.query.search, $options: 'i' } },
+      { 'items.name': { $regex: req.query.search, $options: 'i' } }, // Search within item names
+    ];
+  }
+
+  const count = await Order.countDocuments(query);
+  const orders = await Order.find(query)
+    .populate('user', 'name email') // Populate customer info
+    .sort({ createdAt: -1 })
+    .limit(pageSize)
+    .skip(pageSize * (page - 1));
+
+  res.json({ orders, page, pages: Math.ceil(count / pageSize), count });
+});
+
+// @desc    Update order status (Vendor/Admin)
+// @route   PUT /api/orders/:id/status
+// @access  Private/Vendor, Admin
+const updateOrderStatus = asyncHandler(async (req, res) => {
+  const { id: orderId } = req.params;
+  const { status } = req.body;
+
+  const order = await Order.findById(orderId);
+
+  if (!order) {
+    res.status(404);
+    throw new Error('Order not found');
+  }
+
+  // Authorization check
+  if (req.user.role === 'vendor' && order.store.toString() !== req.user.storeId.toString()) {
+    res.status(403);
+    throw new Error('Not authorized to update this order.');
+  }
+  // Admin can update any order
+
+  // Prevent manual update to 'Delivered' if OTP is present and not yet delivered
+  if (order.deliveryOtp && status === 'Delivered' && order.orderStatus !== 'Delivered') {
+    res.status(400);
+    throw new Error('Delivery must be confirmed with OTP for this order.');
+  }
+
+  order.orderStatus = status;
+  if (status === 'Delivered' && !order.deliveredAt) {
+    order.deliveredAt = Date.now();
+    order.deliveryOtp = undefined; // Clear OTP once delivered
+  } else if (status !== 'Delivered') {
+    order.deliveredAt = undefined;
+  }
+
+  const updatedOrder = await order.save();
+  res.json(updatedOrder);
+});
+
+// @desc    Confirm order delivery with OTP (Vendor)
+// @route   POST /api/orders/:id/confirm-delivery
+// @access  Private/Vendor
+const confirmDelivery = asyncHandler(async (req, res) => {
+  const { id: orderId } = req.params;
+  const { otp } = req.body;
+
+  const order = await Order.findById(orderId);
+
+  if (!order) {
+    res.status(404);
+    throw new Error('Order not found');
+  }
+
+  // Ensure the logged-in user is the vendor of this store
+  if (order.store.toString() !== req.user.storeId.toString()) {
+    res.status(403);
+    throw new Error('Not authorized to confirm delivery for this order.');
+  }
+
+  if (order.orderStatus === 'Delivered') {
+    res.status(400);
+    throw new Error('Order is already delivered.');
+  }
+
+  if (!order.deliveryOtp) {
+    res.status(400);
+    throw new Error('This order does not require OTP for delivery confirmation.');
+  }
+
+  if (order.deliveryOtp !== otp) {
+    res.status(400);
+    throw new Error('Invalid OTP for delivery confirmation.');
+  }
+
+  order.orderStatus = 'Delivered';
+  order.deliveredAt = Date.now();
+  order.deliveryOtp = undefined; // Clear OTP after successful delivery
+  await order.save();
+
+  res.json({ message: `Order ${order._id} marked as Delivered.` });
+});
+
+
 export {
   placeOrder,
   getCustomerOrders,
