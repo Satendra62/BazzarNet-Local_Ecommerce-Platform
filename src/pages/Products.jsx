@@ -8,7 +8,7 @@ import Pagination from '../components/Pagination';
 import ProductCard from '../components/ProductCard'; // Import the new ProductCard component
 
 const Products = () => {
-  const { allAppProducts, allAppProductsMeta, fetchAllProducts, appStores, userPincode } = useContext(AppContext);
+  const { allAppProducts, allAppProductsMeta, fetchAllProducts, appStores, userPincode, setAllAppProducts, setAllAppProductsMeta } = useContext(AppContext);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStore, setSelectedStore] = useState('all');
   const [sortBy, setSortBy] = useState('name-asc');
@@ -38,7 +38,7 @@ const Products = () => {
       setAllAppProducts([]); // Clear products if no pincode
       setAllAppProductsMeta({ page: 1, pages: 1, count: 0 });
     }
-  }, [searchTerm, selectedStore, currentPage, fetchAllProducts, userPincode]);
+  }, [searchTerm, selectedStore, currentPage, fetchAllProducts, userPincode, setAllAppProducts, setAllAppProductsMeta]);
 
   const calculateDiscount = (price, originalPrice) => {
     if (!originalPrice || originalPrice <= price) return 0;
