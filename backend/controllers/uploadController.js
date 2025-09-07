@@ -21,7 +21,7 @@ const uploadFileToCloudinary = (fileBuffer, mimetype) => {
       { folder: 'bazzarnet', resource_type: 'auto' }, // Optional: specify a folder in Cloudinary
       (error, result) => {
         if (error) {
-          console.error('Cloudinary upload error:', error);
+          console.error('Cloudinary upload stream error details:', error); // NEW LOG: Log the full error object
           return reject(new Error('Image upload to Cloudinary failed.'));
         }
         resolve(result.secure_url);
@@ -54,4 +54,4 @@ const uploadImage = asyncHandler(async (req, res) => {
   res.json({ message: 'Image uploaded successfully', filePath });
 });
 
-export { uploadImage, uploadFileToCloudinary }; // Export both
+export { uploadImage, uploadFileToCloudinary };
