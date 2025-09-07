@@ -3,13 +3,14 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEnvelope, faPaperPlane } from '@fortawesome/free-solid-svg-icons';
+import { faEnvelope, faPaperPlane, faSpinner } from '@fortawesome/free-solid-svg-icons'; // Added faSpinner
 import * as api from '../services/api';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false); // NEW: Loading state
 
   const validateForm = () => {
     let newErrors = {};
@@ -25,14 +26,17 @@ const ForgotPassword = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
+      setIsLoading(true); // Start loading
       try {
         const response = await api.passwordReset.forgotPassword(email);
         setMessage(response.message);
         toast.success(response.message);
-        setEmail(''); // Clear email input
+        setEmail('');
       } catch (error) {
         toast.error(error.message || 'Failed to send reset link.');
         setMessage('');
+      } finally {
+        setIsLoading(false); // End loading
       }
     } else {
       toast.error('Please enter a valid email address.');
@@ -74,6 +78,7 @@ const ForgotPassword = () => {
             className={inputClasses}
             aria-invalid={!!errors.email}
             aria-describedby={errors.email ? "email-error" : undefined}
+            disabled={isLoading}
           />
           {errors.email && <p id="email-error" className="text-red-400 text-xs text-left -mt-1 mb-2">{errors.email}</p>}
 
@@ -81,8 +86,10 @@ const ForgotPassword = () => {
             type="submit"
             className="bg-[var(--accent)] text-white border-none py-3 px-6 rounded-lg flex items-center justify-center w-full gap-2 font-medium hover:bg-[var(--accent-dark)] transition-all duration-300 mt-4"
             aria-label="Send password reset link"
+            disabled={isLoading}
           >
-            <FontAwesomeIcon icon={faPaperPlane} aria-hidden="true" /> Send Reset Link
+            {isLoading ? <FontAwesomeIcon icon={faSpinner} spin className="mr-2" /> : <FontAwesomeIcon icon={faPaperPlane} aria-hidden="true" />}
+            {isLoading ? 'Sending...' : 'Send Reset Link'}
           </button>
         </form>
 

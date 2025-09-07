@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Edit, X } from 'lucide-react';
+import { MapPin, Edit, X, Loader2 } from 'lucide-react'; // Added Loader2
 import toast from 'react-hot-toast';
 import { AppContext } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
@@ -28,7 +28,6 @@ const PincodeModal = ({ isOpen, onClose }) => {
 
     setLoading(true);
     try {
-      // First, try to fetch stores for the given pincode
       const { stores } = await api.stores.getAll({ pincode: pincodeInput.trim(), limit: 1 });
       
       if (stores.length === 0) {
@@ -37,10 +36,8 @@ const PincodeModal = ({ isOpen, onClose }) => {
         return;
       }
 
-      // If stores are found, update the user's active pincode in context
       updateUserPincode(pincodeInput.trim());
       
-      // Also, update the user's profile address if it's different
       if (user?.address?.pinCode !== pincodeInput.trim()) {
         await api.userProfile.updateProfile({ address: { ...user.address, pinCode: pincodeInput.trim() } });
         updateUserInContext({ ...user, address: { ...user.address, pinCode: pincodeInput.trim() } });
@@ -49,11 +46,10 @@ const PincodeModal = ({ isOpen, onClose }) => {
         toast.success('Pincode confirmed!');
       }
 
-      // Re-fetch data based on the new pincode
       fetchAppStores({ pincode: pincodeInput.trim() });
       fetchAllProducts({ pincode: pincodeInput.trim() });
 
-      onClose(); // Close the modal
+      onClose();
     } catch (err) {
       console.error('Error submitting pincode:', err);
       setError(err.message || 'Failed to check pincode. Please try again.');
@@ -112,7 +108,7 @@ const PincodeModal = ({ isOpen, onClose }) => {
                   value={pincodeInput}
                   onChange={(e) => {
                     setPincodeInput(e.target.value);
-                    setError(''); // Clear error on input change
+                    setError('');
                   }}
                   placeholder="e.g., 825301"
                   className={inputClasses}
@@ -129,6 +125,7 @@ const PincodeModal = ({ isOpen, onClose }) => {
                 className="bg-[var(--accent)] text-white py-3 px-6 rounded-lg flex items-center justify-center w-full gap-2 font-medium hover:bg-[var(--accent-dark)] transition-all duration-300"
                 disabled={loading}
               >
+                {loading ? <Loader2 size={20} className="animate-spin mr-2" /> : null}
                 {loading ? 'Checking...' : 'Confirm Pincode'}
               </button>
 

@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+html, body {
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+}
+
 :root {
   --bg: #E0E0E0;
   --bg-body: #E0E0E0;

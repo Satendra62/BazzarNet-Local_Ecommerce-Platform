@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { ChevronDown, UploadCloud } from 'lucide-react'; // Added UploadCloud icon
-import useFormValidation from '../hooks/useFormValidation'; // Import the custom hook
-import * as api from '../services/api'; // Import API service for uploads
-import placeholderImage from '../assets/placeholder.png'; // Import placeholder image
-import { getFullImageUrl } from '../utils/imageUtils'; // Import utility
+import { ChevronDown, UploadCloud, Loader2 } from 'lucide-react'; // Added Loader2 icon
+import useFormValidation from '../hooks/useFormValidation';
+import * as api from '../services/api';
+import placeholderImage from '../assets/placeholder.png';
+import { getFullImageUrl } from '../utils/imageUtils';
 
 const ProductForm = ({ onSubmit, initialData = null }) => {
   const [product, setProduct] = useState({
@@ -12,22 +12,22 @@ const ProductForm = ({ onSubmit, initialData = null }) => {
     price: '',
     originalPrice: '',
     stock: '',
-    unit: 'pc', // New field with default value
+    unit: 'pc',
     category: '',
     description: '',
-    image: '', // This will store the URL
+    image: '',
   });
-  const [imageFile, setImageFile] = useState(null); // State to hold the selected image file
-  const fileInputRef = useRef(null); // Ref for the hidden file input
+  const [imageFile, setImageFile] = useState(null);
+  const fileInputRef = useRef(null);
+  const [isSubmitting, setIsSubmitting] = useState(false); // NEW: Loading state
 
   const categories = [
     'Groceries', 'Bakery', 'Butcher', 'Cafe', 'Electronics', 
     'Furniture', 'Decor', 'Clothing', 'Other'
   ];
 
-  const units = ['pc', 'kg', 'g', 'L', 'ml', 'dozen', 'pack', 'set', 'pair', 'unit']; // Available units
+  const units = ['pc', 'kg', 'g', 'L', 'ml', 'dozen', 'pack', 'set', 'pair', 'unit'];
 
-  // Define the validation logic for the product form
   const productValidationLogic = useCallback((data) => {
     let newErrors = {};
     const priceValue = parseFloat(data.price);
@@ -40,7 +40,7 @@ const ProductForm = ({ onSubmit, initialData = null }) => {
     if (!data.category) {
       newErrors.category = 'Category is required.';
     }
-    if (!data.unit) { // Validate unit
+    if (!data.unit) {
       newErrors.unit = 'Unit is required.';
     }
     if (isNaN(priceValue) || priceValue <= 0) {
@@ -57,17 +57,15 @@ const ProductForm = ({ onSubmit, initialData = null }) => {
     }
     if (!data.description.trim()) {
       newErrors.description = 'Description is required.';
-    } else if (data.description.trim().length < 10) { // Updated validation for description length
+    } else if (data.description.trim().length < 10) {
       newErrors.description = 'Description must be at least 10 characters long.';
     }
-    // Image validation: require either a file or an existing URL
     if (!imageFile && !data.image.trim()) {
       newErrors.image = 'Product image is required (upload a file or provide a URL).';
     }
     return newErrors;
   }, [imageFile]);
 
-  // Use the custom validation hook
   const { errors, validate, resetErrors } = useFormValidation(product, productValidationLogic);
 
   useEffect(() => {
@@ -77,22 +75,21 @@ const ProductForm = ({ onSubmit, initialData = null }) => {
         price: initialData.price || '',
         originalPrice: initialData.originalPrice || '',
         stock: initialData.stock || '',
-        unit: initialData.unit || 'pc', // Set initial unit
+        unit: initialData.unit || 'pc',
         category: initialData.category || '',
         description: initialData.description || '',
-        image: initialData.image || '', // Keep existing image URL
+        image: initialData.image || '',
       });
-      setImageFile(null); // Clear any selected file when editing existing product
+      setImageFile(null);
     } else {
-      // Reset form for new product
       setProduct({
         name: '', price: '', originalPrice: '', stock: '',
-        unit: 'pc', // Reset unit
+        unit: 'pc',
         category: '', description: '', image: '',
       });
-      setImageFile(null); // Clear any selected file
+      setImageFile(null);
     }
-    resetErrors(); // Clear errors on initialData change
+    resetErrors();
   }, [initialData, resetErrors]);
 
   const handleChange = (e) => {
@@ -103,7 +100,6 @@ const ProductForm = ({ onSubmit, initialData = null }) => {
   const handleImageFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       setImageFile(e.target.files[0]);
-      // Clear the image URL if a new file is selected
       setProduct(prev => ({ ...prev, image: '' }));
     } else {
       setImageFile(null);
@@ -111,7 +107,7 @@ const ProductForm = ({ onSubmit, initialData = null }) => {
   };
 
   const handleImageUpload = async () => {
-    if (!imageFile) return product.image; // If no new file, return existing URL
+    if (!imageFile) return product.image;
 
     const formData = new FormData();
     formData.append('image', imageFile);
@@ -119,24 +115,23 @@ const ProductForm = ({ onSubmit, initialData = null }) => {
     try {
       const response = await api.upload.uploadImage(formData);
       toast.success('Image uploaded successfully!');
-      return response.filePath; // Return the URL of the uploaded image
+      return response.filePath;
     } catch (error) {
       toast.error(`Image upload failed: ${error.message}`);
-      throw error; // Re-throw to stop form submission if upload fails
+      throw error;
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validate with current product state
     if (validate(product)) {
+      setIsSubmitting(true); // Start loading
       try {
         let imageUrl = product.image;
         if (imageFile) {
-          imageUrl = await handleImageUpload(); // Upload image if a new file is selected
+          imageUrl = await handleImageUpload();
         } else if (!imageUrl.trim()) {
-          // If no file and no URL, it should have been caught by validation, but double-check
           toast.error('Product image is required.');
           return;
         }
@@ -146,12 +141,13 @@ const ProductForm = ({ onSubmit, initialData = null }) => {
           price: parseFloat(product.price),
           originalPrice: product.originalPrice ? parseFloat(product.originalPrice) : null,
           stock: parseInt(product.stock),
-          image: imageUrl, // Use the uploaded URL or existing URL
+          image: imageUrl,
         };
         onSubmit(submittedProduct);
       } catch (error) {
         console.error('Product form submission error:', error);
-        // Error toast already shown by handleImageUpload
+      } finally {
+        setIsSubmitting(false); // End loading
       }
     } else {
       toast.error('Please correct the errors in the form.');
@@ -176,6 +172,7 @@ const ProductForm = ({ onSubmit, initialData = null }) => {
             className={inputClasses} 
             aria-invalid={!!errors.name}
             aria-describedby={errors.name ? "productName-error" : undefined}
+            disabled={isSubmitting}
           />
           {errors.name && <p id="productName-error" className="text-red-400 text-xs mt-1">{errors.name}</p>}
         </div>
@@ -189,6 +186,7 @@ const ProductForm = ({ onSubmit, initialData = null }) => {
             className={`${inputClasses} appearance-none pr-8`}
             aria-invalid={!!errors.category}
             aria-describedby={errors.category ? "productCategory-error" : undefined}
+            disabled={isSubmitting}
           >
             <option value="" disabled>Select a category</option>
             {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
@@ -198,7 +196,6 @@ const ProductForm = ({ onSubmit, initialData = null }) => {
         </div>
       </div>
       
-      {/* Image Upload Section */}
       <div>
         <label htmlFor="productImageFile" className="block text-sm font-medium mb-1">Product Image</label>
         <div className="flex items-center gap-4">
@@ -210,12 +207,14 @@ const ProductForm = ({ onSubmit, initialData = null }) => {
             className="hidden"
             accept="image/*"
             aria-label="Upload product image file"
+            disabled={isSubmitting}
           />
           <button
             type="button"
             onClick={() => fileInputRef.current.click()}
             className="bg-white/10 text-[var(--text)] py-2 px-4 rounded-lg flex items-center gap-2 font-medium hover:bg-white/20 transition-colors"
             aria-controls="productImagePreview"
+            disabled={isSubmitting}
           >
             <UploadCloud size={20} /> Choose File
           </button>
@@ -225,7 +224,6 @@ const ProductForm = ({ onSubmit, initialData = null }) => {
         </div>
         {errors.image && <p id="productImage-error" className="text-red-400 text-xs mt-1">{errors.image}</p>}
         
-        {/* Optional: Direct Image URL Input (if no file is selected) */}
         {!imageFile && (
           <div className="mt-4">
             <label htmlFor="productImageUrl" className="block text-sm font-medium mb-1">Or enter Image URL</label>
@@ -239,6 +237,7 @@ const ProductForm = ({ onSubmit, initialData = null }) => {
               className={inputClasses} 
               aria-invalid={!!errors.image}
               aria-describedby={errors.image ? "productImageUrl-error" : undefined}
+              disabled={isSubmitting}
             />
             {errors.image && <p id="productImageUrl-error" className="text-red-400 text-xs mt-1">{errors.image}</p>}
           </div>
@@ -250,7 +249,7 @@ const ProductForm = ({ onSubmit, initialData = null }) => {
               src={previewImageSrc} 
               alt="Image Preview" 
               className="max-w-full max-h-full object-contain" 
-              onError={(e) => { e.target.onerror = null; e.target.src = placeholderImage; }} // Fallback image
+              onError={(e) => { e.target.onerror = null; e.target.src = placeholderImage; }}
             />
           </div>
         )}
@@ -268,6 +267,7 @@ const ProductForm = ({ onSubmit, initialData = null }) => {
             className={inputClasses} 
             aria-invalid={!!errors.price}
             aria-describedby={errors.price ? "productPrice-error" : undefined}
+            disabled={isSubmitting}
           />
           {errors.price && <p id="productPrice-error" className="text-red-400 text-xs mt-1">{errors.price}</p>}
         </div>
@@ -282,6 +282,7 @@ const ProductForm = ({ onSubmit, initialData = null }) => {
             className={inputClasses} 
             aria-invalid={!!errors.originalPrice}
             aria-describedby={errors.originalPrice ? "originalPrice-error" : undefined}
+            disabled={isSubmitting}
           />
           {errors.originalPrice && <p id="originalPrice-error" className="text-red-400 text-xs mt-1">{errors.originalPrice}</p>}
         </div>
@@ -296,11 +297,11 @@ const ProductForm = ({ onSubmit, initialData = null }) => {
             className={inputClasses} 
             aria-invalid={!!errors.stock}
             aria-describedby={errors.stock ? "productStock-error" : undefined}
+            disabled={isSubmitting}
           />
           {errors.stock && <p id="productStock-error" className="text-red-400 text-xs mt-1">{errors.stock}</p>}
         </div>
       </div>
-      {/* New Unit Selection Field */}
       <div className="relative">
         <label htmlFor="productUnit" className="block text-sm font-medium mb-1">Unit</label>
         <select 
@@ -311,6 +312,7 @@ const ProductForm = ({ onSubmit, initialData = null }) => {
           className={`${inputClasses} appearance-none pr-8`}
           aria-invalid={!!errors.unit}
           aria-describedby={errors.unit ? "productUnit-error" : undefined}
+          disabled={isSubmitting}
         >
           {units.map(unit => <option key={unit} value={unit}>{unit}</option>)}
         </select>
@@ -329,12 +331,18 @@ const ProductForm = ({ onSubmit, initialData = null }) => {
           className={inputClasses}
           aria-invalid={!!errors.description}
           aria-describedby={errors.description ? "productDescription-error" : undefined}
+          disabled={isSubmitting}
         ></textarea>
         {errors.description && <p id="productDescription-error" className="text-red-400 text-xs mt-1">{errors.description}</p>}
       </div>
       <div className="flex justify-end">
-        <button type="submit" className="bg-[var(--accent)] text-white py-2 px-6 rounded-lg font-medium hover:bg-[var(--accent-dark)] transition-colors">
-          {initialData ? 'Save Changes' : 'Add Product'}
+        <button 
+          type="submit" 
+          className="bg-[var(--accent)] text-white py-2 px-6 rounded-lg font-medium hover:bg-[var(--accent-dark)] transition-colors flex items-center gap-2"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? <Loader2 size={20} className="animate-spin" /> : null}
+          {initialData ? (isSubmitting ? 'Saving...' : 'Save Changes') : (isSubmitting ? 'Adding...' : 'Add Product')}
         </button>
       </div>
     </form>

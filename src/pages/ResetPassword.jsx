@@ -3,9 +3,9 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faLock, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
+import { faLock, faCheckCircle, faSpinner } from '@fortawesome/free-solid-svg-icons'; // Added faSpinner
 import * as api from '../services/api';
-import { Eye, EyeOff } from 'lucide-react'; // Import Lucide icons
+import { Eye, EyeOff } from 'lucide-react';
 
 const ResetPassword = () => {
   const { token } = useParams();
@@ -14,8 +14,9 @@ const ResetPassword = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errors, setErrors] = useState({});
   const [resetSuccess, setResetSuccess] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false); // New state
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // New state
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // NEW: Loading state
 
   const validateForm = () => {
     let newErrors = {};
@@ -36,12 +37,15 @@ const ResetPassword = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
+      setIsLoading(true); // Start loading
       try {
         const response = await api.passwordReset.resetPassword(token, password);
         toast.success(response.message);
         setResetSuccess(true);
       } catch (error) {
         toast.error(error.message || 'Failed to reset password.');
+      } finally {
+        setIsLoading(false); // End loading
       }
     } else {
       toast.error('Please correct the errors in the form.');
@@ -108,6 +112,7 @@ const ResetPassword = () => {
               className={`${inputClasses} pr-10`}
               aria-invalid={!!errors.password}
               aria-describedby={errors.password ? "newPassword-error" : undefined}
+              disabled={isLoading}
             />
             <button
               type="button"
@@ -115,6 +120,7 @@ const ResetPassword = () => {
               className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text)] opacity-70 hover:opacity-100"
               aria-label={showNewPassword ? 'Hide new password' : 'Show new password'}
               aria-pressed={showNewPassword}
+              disabled={isLoading}
             >
               {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
@@ -132,6 +138,7 @@ const ResetPassword = () => {
               className={`${inputClasses} pr-10`}
               aria-invalid={!!errors.confirmPassword}
               aria-describedby={errors.confirmPassword ? "confirmNewPassword-error" : undefined}
+              disabled={isLoading}
             />
             <button
               type="button"
@@ -139,6 +146,7 @@ const ResetPassword = () => {
               className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text)] opacity-70 hover:opacity-100"
               aria-label={showConfirmPassword ? 'Hide confirmed password' : 'Show confirmed password'}
               aria-pressed={showConfirmPassword}
+              disabled={isLoading}
             >
               {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
@@ -149,8 +157,10 @@ const ResetPassword = () => {
             type="submit"
             className="bg-[var(--accent)] text-white border-none py-3 px-6 rounded-lg flex items-center justify-center w-full gap-2 font-medium hover:bg-[var(--accent-dark)] transition-all duration-300 mt-4"
             aria-label="Reset password"
+            disabled={isLoading}
           >
-            <FontAwesomeIcon icon={faLock} aria-hidden="true" /> Reset Password
+            {isLoading ? <FontAwesomeIcon icon={faSpinner} spin className="mr-2" /> : <FontAwesomeIcon icon={faLock} aria-hidden="true" />}
+            {isLoading ? 'Resetting...' : 'Reset Password'}
           </button>
         </form>
       </motion.div>

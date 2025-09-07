@@ -4,7 +4,7 @@ import useTheme from '../hooks/useTheme';
 import useUtils from '../hooks/useUtils';
 import useProducts from '../hooks/useProducts';
 import useStores from '../hooks/useStores';
-import useCart from '../hooks/useCart.jsx'; // Corrected import path
+import useCart from '../hooks/useCart.jsx';
 import useWishlist from '../hooks/useWishlist';
 import useOrders from '../hooks/useOrders';
 import useUsers from '../hooks/useUsers';
@@ -34,12 +34,10 @@ export const AppProvider = ({ children }) => {
   const { theme, toggleTheme } = useTheme();
   const { generateOtp } = useUtils();
 
-  // Sidebar state is still local to AppContext as it's a global UI state
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const toggleSidebar = useCallback(() => setSidebarOpen(prev => !prev), []);
 
-  // NEW: Pincode state for filtering and modal visibility
-  const [userPincode, setUserPincode] = React.useState(null); // The active pincode for filtering
+  const [userPincode, setUserPincode] = React.useState(null);
   const [showPincodeModal, setShowPincodeModal] = React.useState(false);
 
   const updateUserPincode = useCallback((pincode) => {
@@ -56,7 +54,7 @@ export const AppProvider = ({ children }) => {
     fetchRecommendedProducts,
     setAllAppProducts,
     setAllAppProductsMeta
-  } = useProducts();
+  } = useProducts(isLoggedIn, userPincode); // NEW: Pass isLoggedIn, userPincode
 
   const {
     appStores,
@@ -64,7 +62,7 @@ export const AppProvider = ({ children }) => {
     fetchAppStores,
     setAppStores,
     setAppStoresMeta,
-  } = useStores();
+  } = useStores(isLoggedIn, userPincode); // NEW: Pass isLoggedIn, userPincode
 
   const {
     cart,
@@ -138,7 +136,6 @@ export const AppProvider = ({ children }) => {
     setDiscountAmount,
   } = useCoupons({ user, isLoggedIn, orders });
 
-  // --- User Profile Update in Context ---
   const updateUserInContext = useCallback((updatedUserData) => {
     setAuthUser(prevUser => ({ ...prevUser, ...updatedUserData }));
     const storedUser = JSON.parse(localStorage.getItem('user'));
@@ -147,7 +144,6 @@ export const AppProvider = ({ children }) => {
     }
   }, [setAuthUser]);
 
-  // --- Signup Functions (Backend Integrated) ---
   const registerUser = useCallback(async (userData) => {
     try {
       const response = await api.auth.registerUser(userData);
@@ -166,10 +162,10 @@ export const AppProvider = ({ children }) => {
   const registerVendor = useCallback(async (vendorData) => {
     try {
       const response = await api.auth.registerVendor({
-        fullName: vendorData.fullName, // CORRECTED: Use fullName as key
+        fullName: vendorData.fullName,
         email: vendorData.email,
         password: vendorData.password,
-        businessName: vendorData.businessName, // CORRECTED: Use businessName as key
+        businessName: vendorData.businessName,
         businessDescription: vendorData.businessDescription,
         category: vendorData.category,
         phone: vendorData.phone,
@@ -189,36 +185,40 @@ export const AppProvider = ({ children }) => {
     }
   }, [loginUserInState]);
 
-  // --- Initial Data Load on Login/Role Change ---
   useEffect(() => {
     const loadInitialData = async () => {
       if (isLoggedIn) {
-        // Set initial userPincode from profile if available
         if (user?.address?.pinCode) {
           setUserPincode(user.address.pinCode);
-          setShowPincodeModal(false); // Don't show modal if pincode is already in profile
+          setShowPincodeModal(false);
         } else if (!isVendor && !isAdmin) {
-          // Only show pincode modal for customers without a pincode in profile
           setShowPincodeModal(true);
         }
 
-        const commonParams = { pincode: userPincode || user?.address?.pinCode }; // Use active pincode or profile pincode
+        const commonParams = { pincode: userPincode || user?.address?.pinCode };
 
         const promises = [
-          fetchAllProducts(commonParams),
-          fetchAppStores(commonParams),
+          // Only fetch these if a pincode is set or if it's a general fetch for logged-in users
+          // The hooks themselves now handle the conditional fetching based on isLoggedIn/userPincode
           fetchCart(),
           fetchWishlist(),
           fetchOrders(),
-          refetch(),
+          refetch(), // Coupons
         ];
 
         if (isAdmin) {
           promises.push(fetchAllUsers());
+          promises.push(fetchAllProducts(commonParams)); // Admin fetches all products, potentially filtered by pincode
+          promises.push(fetchAppStores(commonParams)); // Admin fetches all stores, potentially filtered by pincode
         }
         if (isVendor) {
           promises.push(fetchVendorProducts());
+          promises.push(fetchAllProducts(commonParams)); // Vendor also needs all products for context, potentially filtered
+          promises.push(fetchAppStores(commonParams)); // Vendor also needs all stores for context, potentially filtered
         }
+        // For customers, fetchAllProducts and fetchAppStores are handled by the individual pages (Products, Stores)
+        // or by the hooks' internal useEffects if userPincode is set.
+        // Recommended products are handled by useProducts' internal useEffect.
 
         try {
           await Promise.all(promises);
@@ -226,7 +226,6 @@ export const AppProvider = ({ children }) => {
           console.error("Error loading initial data:", error);
         }
       } else {
-        // Clear all data if logged out
         setCart([]);
         setWishlist([]);
         setAllAppProducts([]);
@@ -241,8 +240,8 @@ export const AppProvider = ({ children }) => {
         setAllAppUsersMeta({ page: 1, pages: 1, count: 0 });
         setAppliedCoupon(null); 
         setDiscountAmount(0); 
-        setUserPincode(null); // Clear active pincode
-        setShowPincodeModal(false); // Hide modal
+        setUserPincode(null);
+        setShowPincodeModal(false);
       }
     };
 
@@ -277,6 +276,9 @@ export const AppProvider = ({ children }) => {
     allAppProducts,
     allAppProductsMeta,
     fetchAllProducts,
+    recommendedProducts,
+    recommendedLoading,
+    fetchRecommendedProducts,
     vendorProducts,
     vendorProductsMeta,
     fetchVendorProducts,
@@ -310,10 +312,10 @@ export const AppProvider = ({ children }) => {
     fetchAvailableCoupons: refetch,
     applyCoupon,
     removeCoupon,
-    userPincode, // NEW: Expose userPincode
-    updateUserPincode, // NEW: Expose updater
-    showPincodeModal, // NEW: Expose modal visibility
-    setShowPincodeModal, // NEW: Expose modal setter
+    userPincode,
+    updateUserPincode,
+    showPincodeModal,
+    setShowPincodeModal,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

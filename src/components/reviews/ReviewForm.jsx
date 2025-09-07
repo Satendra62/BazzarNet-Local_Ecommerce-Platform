@@ -4,6 +4,7 @@ import { faStar as solidStar, faStarHalfAlt } from '@fortawesome/free-solid-svg-
 import { faStar as regularStar } from '@fortawesome/free-regular-svg-icons';
 import toast from 'react-hot-toast';
 import * as api from '../../services/api';
+import { Loader2 } from 'lucide-react'; // Added Loader2
 
 const inputClasses = "w-full p-2 rounded-lg bg-white/10 border border-black/30 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] text-[var(--text)]";
 
@@ -40,7 +41,7 @@ const ReviewForm = ({ productId, onReviewSubmitted }) => {
       setRating(0);
       setComment('');
       setErrors({});
-      onReviewSubmitted(); // Callback to refresh reviews or update UI
+      onReviewSubmitted();
     } catch (error) {
       toast.error(error.message || 'Failed to submit review.');
     } finally {
@@ -85,6 +86,7 @@ const ReviewForm = ({ productId, onReviewSubmitted }) => {
           placeholder="Share your thoughts on this product..."
           aria-invalid={!!errors.comment}
           aria-describedby={errors.comment ? "reviewComment-error" : undefined}
+          disabled={isLoading}
         ></textarea>
         {errors.comment && <p id="reviewComment-error" className="text-red-400 text-xs mt-1">{errors.comment}</p>}
       </div>
@@ -94,11 +96,7 @@ const ReviewForm = ({ productId, onReviewSubmitted }) => {
         className="bg-[var(--accent)] text-white py-2 px-6 rounded-lg font-medium hover:bg-[var(--accent-dark)] transition-colors flex items-center justify-center gap-2"
         disabled={isLoading}
       >
-        {isLoading ? (
-          <FontAwesomeIcon icon={solidStar} spin className="mr-2" />
-        ) : (
-          <FontAwesomeIcon icon={solidStar} />
-        )}
+        {isLoading ? <Loader2 size={20} className="animate-spin mr-2" /> : null}
         {isLoading ? 'Submitting...' : 'Submit Review'}
       </button>
     </form>

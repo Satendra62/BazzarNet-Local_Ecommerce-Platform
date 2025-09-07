@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { ChevronDown, UploadCloud } from 'lucide-react';
+import { ChevronDown, UploadCloud, Loader2 } from 'lucide-react'; // Added Loader2 icon
 import useFormValidation from '../hooks/useFormValidation';
 import * as api from '../services/api';
-import placeholderImage from '../assets/placeholder.png'; // Import placeholder image
-import { getFullImageUrl } from '../utils/imageUtils'; // Import utility
+import placeholderImage from '../assets/placeholder.png';
+import { getFullImageUrl } from '../utils/imageUtils';
 
 const indianStates = [
   "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
@@ -29,11 +29,12 @@ const StoreForm = ({ onSubmit, initialData = null }) => {
     },
     phone: '',
     email: '',
-    logo: '', // This will store the URL
+    logo: '',
     isActive: true,
   });
-  const [logoFile, setLogoFile] = useState(null); // State to hold the selected logo file
-  const fileInputRef = useRef(null); // Ref for the hidden file input
+  const [logoFile, setLogoFile] = useState(null);
+  const fileInputRef = useRef(null);
+  const [isSubmitting, setIsSubmitting] = useState(false); // NEW: Loading state
 
   const categories = [
     'Groceries', 'Bakery', 'Butcher', 'Cafe', 'Electronics', 
@@ -75,7 +76,6 @@ const StoreForm = ({ onSubmit, initialData = null }) => {
     } else if (!/^\d{6}$/.test(data.address.pinCode)) {
       newErrors.address = { ...newErrors.address, pinCode: 'Pin Code must be 6 digits.' };
     }
-    // Logo validation: require either a file or an existing URL
     if (!logoFile && !data.logo.trim()) {
       newErrors.logo = 'Store logo is required (upload a file or provide a URL).';
     }
@@ -96,14 +96,14 @@ const StoreForm = ({ onSubmit, initialData = null }) => {
         logo: initialData.logo || '',
         isActive: initialData.isActive !== undefined ? initialData.isActive : true,
       });
-      setLogoFile(null); // Clear any selected file when editing existing store
+      setLogoFile(null);
     } else {
       setStore({
         name: '', description: '', category: '',
         address: { houseNo: '', landmark: '', city: '', state: '', pinCode: '' },
         phone: '', email: '', logo: '', isActive: true,
       });
-      setLogoFile(null); // Clear any selected file
+      setLogoFile(null);
     }
     resetErrors();
   }, [initialData, resetErrors]);
@@ -129,7 +129,6 @@ const StoreForm = ({ onSubmit, initialData = null }) => {
   const handleLogoFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       setLogoFile(e.target.files[0]);
-      // Clear the logo URL if a new file is selected
       setStore(prev => ({ ...prev, logo: '' }));
     } else {
       setLogoFile(null);
@@ -137,18 +136,18 @@ const StoreForm = ({ onSubmit, initialData = null }) => {
   };
 
   const handleLogoUpload = async () => {
-    if (!logoFile) return store.logo; // If no new file, return existing URL
+    if (!logoFile) return store.logo;
 
     const formData = new FormData();
-    formData.append('image', logoFile); // Backend expects 'image' field
+    formData.append('image', logoFile);
 
     try {
       const response = await api.upload.uploadImage(formData);
       toast.success('Logo uploaded successfully!');
-      return response.filePath; // Return the URL of the uploaded image
+      return response.filePath;
     } catch (error) {
       toast.error(`Logo upload failed: ${error.message}`);
-      throw error; // Re-throw to stop form submission if upload fails
+      throw error;
     }
   };
 
@@ -156,10 +155,11 @@ const StoreForm = ({ onSubmit, initialData = null }) => {
     e.preventDefault();
     
     if (validate(store)) {
+      setIsSubmitting(true); // Start loading
       try {
         let logoUrl = store.logo;
         if (logoFile) {
-          logoUrl = await handleLogoUpload(); // Upload logo if a new file is selected
+          logoUrl = await handleLogoUpload();
         } else if (!logoUrl.trim()) {
           toast.error('Store logo is required.');
           return;
@@ -167,12 +167,13 @@ const StoreForm = ({ onSubmit, initialData = null }) => {
 
         const submittedStore = {
           ...store,
-          logo: logoUrl, // Use the uploaded URL or existing URL
+          logo: logoUrl,
         };
         onSubmit(submittedStore);
       } catch (error) {
         console.error('Store form submission error:', error);
-        // Error toast already shown by handleLogoUpload
+      } finally {
+        setIsSubmitting(false); // End loading
       }
     } else {
       toast.error('Please correct the errors in the form.');
@@ -197,6 +198,7 @@ const StoreForm = ({ onSubmit, initialData = null }) => {
             className={inputClasses} 
             aria-invalid={!!errors.name}
             aria-describedby={errors.name ? "storeName-error" : undefined}
+            disabled={isSubmitting}
           />
           {errors.name && <p id="storeName-error" className="text-red-400 text-xs mt-1">{errors.name}</p>}
         </div>
@@ -210,6 +212,7 @@ const StoreForm = ({ onSubmit, initialData = null }) => {
             className={`${inputClasses} appearance-none pr-8`}
             aria-invalid={!!errors.category}
             aria-describedby={errors.category ? "storeCategory-error" : undefined}
+            disabled={isSubmitting}
           >
             <option value="" disabled>Select a category</option>
             {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
@@ -230,11 +233,11 @@ const StoreForm = ({ onSubmit, initialData = null }) => {
           className={inputClasses}
           aria-invalid={!!errors.description}
           aria-describedby={errors.description ? "storeDescription-error" : undefined}
+          disabled={isSubmitting}
         ></textarea>
         {errors.description && <p id="storeDescription-error" className="text-red-400 text-xs mt-1">{errors.description}</p>}
       </div>
 
-      {/* Logo Upload Section */}
       <div>
         <label htmlFor="storeLogoFile" className="block text-sm font-medium mb-1">Store Logo</label>
         <div className="flex items-center gap-4">
@@ -246,12 +249,14 @@ const StoreForm = ({ onSubmit, initialData = null }) => {
             className="hidden"
             accept="image/*"
             aria-label="Upload store logo file"
+            disabled={isSubmitting}
           />
           <button
             type="button"
             onClick={() => fileInputRef.current.click()}
             className="bg-white/10 text-[var(--text)] py-2 px-4 rounded-lg flex items-center gap-2 font-medium hover:bg-white/20 transition-colors"
             aria-controls="storeLogoPreview"
+            disabled={isSubmitting}
           >
             <UploadCloud size={20} /> Choose File
           </button>
@@ -261,7 +266,6 @@ const StoreForm = ({ onSubmit, initialData = null }) => {
         </div>
         {errors.logo && <p id="storeLogo-error" className="text-red-400 text-xs mt-1">{errors.logo}</p>}
 
-        {/* Optional: Direct Logo URL Input (if no file is selected) */}
         {!logoFile && (
           <div className="mt-4">
             <label htmlFor="storeLogoUrl" className="block text-sm font-medium mb-1">Or enter Logo URL</label>
@@ -275,6 +279,7 @@ const StoreForm = ({ onSubmit, initialData = null }) => {
               className={inputClasses} 
               aria-invalid={!!errors.logo}
               aria-describedby={errors.logo ? "storeLogoUrl-error" : undefined}
+              disabled={isSubmitting}
             />
             {errors.logo && <p id="storeLogoUrl-error" className="text-red-400 text-xs mt-1">{errors.logo}</p>}
           </div>
@@ -286,7 +291,7 @@ const StoreForm = ({ onSubmit, initialData = null }) => {
               src={previewLogoSrc} 
               alt="Logo Preview" 
               className="max-w-full max-h-full object-contain" 
-              onError={(e) => { e.target.onerror = null; e.target.src = placeholderImage; }} // Fallback image
+              onError={(e) => { e.target.onerror = null; e.target.src = placeholderImage; }}
             />
           </div>
         )}
@@ -304,6 +309,7 @@ const StoreForm = ({ onSubmit, initialData = null }) => {
             className={inputClasses} 
             aria-invalid={!!errors.phone}
             aria-describedby={errors.phone ? "storePhone-error" : undefined}
+            disabled={isSubmitting}
           />
           {errors.phone && <p id="storePhone-error" className="text-red-400 text-xs mt-1">{errors.phone}</p>}
         </div>
@@ -318,12 +324,12 @@ const StoreForm = ({ onSubmit, initialData = null }) => {
             className={inputClasses} 
             aria-invalid={!!errors.email}
             aria-describedby={errors.email ? "storeEmail-error" : undefined}
+            disabled={isSubmitting}
           />
           {errors.email && <p id="storeEmail-error" className="text-red-400 text-xs mt-1">{errors.email}</p>}
         </div>
       </div>
 
-      {/* Address Fields */}
       <div>
         <label htmlFor="addressHouseNo" className="block text-sm font-medium mb-1">House No., Street</label>
         <input 
@@ -335,6 +341,7 @@ const StoreForm = ({ onSubmit, initialData = null }) => {
           className={inputClasses} 
           aria-invalid={!!errors.address?.houseNo}
           aria-describedby={errors.address?.houseNo ? "addressHouseNo-error" : undefined}
+          disabled={isSubmitting}
         />
         {errors.address?.houseNo && <p id="addressHouseNo-error" className="text-red-400 text-xs mt-1">{errors.address.houseNo}</p>}
       </div>
@@ -347,6 +354,7 @@ const StoreForm = ({ onSubmit, initialData = null }) => {
           value={store.address.landmark} 
           onChange={handleChange} 
           className={inputClasses} 
+          disabled={isSubmitting}
         />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -361,6 +369,7 @@ const StoreForm = ({ onSubmit, initialData = null }) => {
             className={inputClasses} 
             aria-invalid={!!errors.address?.city}
             aria-describedby={errors.address?.city ? "addressCity-error" : undefined}
+            disabled={isSubmitting}
           />
           {errors.address?.city && <p id="addressCity-error" className="text-red-400 text-xs mt-1">{errors.address.city}</p>}
         </div>
@@ -374,6 +383,7 @@ const StoreForm = ({ onSubmit, initialData = null }) => {
             className={`${inputClasses} appearance-none pr-8`}
             aria-invalid={!!errors.address?.state}
             aria-describedby={errors.address?.state ? "addressState-error" : undefined}
+            disabled={isSubmitting}
           >
             <option value="" disabled>Select State</option>
             {indianStates.map(state => <option key={state} value={state}>{state}</option>)}
@@ -394,11 +404,11 @@ const StoreForm = ({ onSubmit, initialData = null }) => {
           maxLength="6"
           aria-invalid={!!errors.address?.pinCode}
           aria-describedby={errors.address?.pinCode ? "addressPinCode-error" : undefined}
+          disabled={isSubmitting}
         />
         {errors.address?.pinCode && <p id="addressPinCode-error" className="text-red-400 text-xs mt-1">{errors.address.pinCode}</p>}
       </div>
 
-      {/* isActive Toggle */}
       <div className="flex items-center gap-2">
         <input
           type="checkbox"
@@ -407,13 +417,19 @@ const StoreForm = ({ onSubmit, initialData = null }) => {
           checked={store.isActive}
           onChange={handleChange}
           className="h-4 w-4 text-[var(--accent)] rounded border-gray-300 focus:ring-[var(--accent)]"
+          disabled={isSubmitting}
         />
         <label htmlFor="storeIsActive" className="text-sm font-medium">Store is Active</label>
       </div>
 
       <div className="flex justify-end">
-        <button type="submit" className="bg-[var(--accent)] text-white py-2 px-6 rounded-lg font-medium hover:bg-[var(--accent-dark)] transition-colors">
-          {initialData ? 'Save Changes' : 'Add Store'}
+        <button 
+          type="submit" 
+          className="bg-[var(--accent)] text-white py-2 px-6 rounded-lg font-medium hover:bg-[var(--accent-dark)] transition-colors flex items-center gap-2"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? <Loader2 size={20} className="animate-spin" /> : null}
+          {initialData ? (isSubmitting ? 'Saving...' : 'Save Changes') : (isSubmitting ? 'Adding...' : 'Add Store')}
         </button>
       </div>
     </form>
