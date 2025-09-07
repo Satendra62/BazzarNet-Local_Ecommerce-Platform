@@ -69,9 +69,8 @@ const useCart = (isLoggedIn, user, isVendor, isAdmin) => {
       if (newProductStoreId.toString() !== currentCartStoreId.toString()) {
         toast.custom((t) => (
           <div
-            className={`${
-              t.visible ? 'animate-enter' : 'animate-leave'
-            } max-w-md w-full bg-[var(--card-bg)] text-[var(--text)] shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-white/10`}
+            // Removed custom animation classes 'animate-enter' and 'animate-leave'
+            className="max-w-md w-full bg-[var(--card-bg)] text-[var(--text)] shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-white/10"
           >
             <div className="flex-1 w-0 p-4">
               <div className="flex items-start">
