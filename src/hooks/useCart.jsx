@@ -17,7 +17,7 @@ const useCart = (isLoggedIn, user, isVendor, isAdmin) => {
       setCart(userCart.items);
     } catch (error) {
       console.error('fetchCart: Failed to load cart:', error);
-      toast.error(`Failed to load cart: ${error.message}`);
+      toast.error(`Failed to load cart: ${error.message}`, { duration: 2500 });
       setCart([]); // Clear cart on error
     }
   }, [isLoggedIn, user?._id, isVendor, isAdmin]);
@@ -31,15 +31,15 @@ const useCart = (isLoggedIn, user, isVendor, isAdmin) => {
     try {
       await api.customer.clearCart();
       setCart([]);
-      toast.success('Your cart has been cleared.');
+      toast.success('Your cart has been cleared.', { duration: 2500 });
     } catch (error) {
-      toast.error(`Error clearing cart: ${error.message}`);
+      toast.error(`Error clearing cart: ${error.message}`, { duration: 2500 });
     }
   }, [isLoggedIn, user?._id]);
 
   const addToCart = useCallback(async (product) => {
     if (!isLoggedIn || !user?._id) {
-      toast.error('Please log in to add items to your cart.');
+      toast.error('Please log in to add items to your cart.', { duration: 2500 });
       return;
     }
 
@@ -57,7 +57,7 @@ const useCart = (isLoggedIn, user, isVendor, isAdmin) => {
     }
 
     if (!newProductStoreId) {
-      toast.error('Could not determine store for this product.');
+      toast.error('Could not determine store for this product.', { duration: 2500 });
       return;
     }
 
@@ -69,7 +69,6 @@ const useCart = (isLoggedIn, user, isVendor, isAdmin) => {
       if (newProductStoreId.toString() !== currentCartStoreId.toString()) {
         toast.custom((t) => (
           <div
-            // Removed custom animation classes 'animate-enter' and 'animate-leave'
             className="max-w-md w-full bg-[var(--card-bg)] text-[var(--text)] shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-white/10"
           >
             <div className="flex-1 w-0 p-4">
@@ -98,9 +97,9 @@ const useCart = (isLoggedIn, user, isVendor, isAdmin) => {
                   try {
                     const response = await api.customer.addToCart(actualProductId, 1, actualUnit);
                     setCart(response.items);
-                    toast.success(`${productName} added to cart!`);
+                    toast.success(`${productName} added to cart!`, { duration: 2500 });
                   } catch (error) {
-                    toast.error(`Error adding to cart: ${error.message}`);
+                    toast.error(`Error adding to cart: ${error.message}`, { duration: 2500 });
                   }
                 }}
                 className="w-full border-b border-white/10 p-3 flex items-center justify-center text-sm font-medium text-[var(--accent)] hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-colors"
@@ -124,9 +123,9 @@ const useCart = (isLoggedIn, user, isVendor, isAdmin) => {
     try {
       const response = await api.customer.addToCart(actualProductId, 1, actualUnit);
       setCart(response.items);
-      toast.success(`${productName} added to cart!`);
+      toast.success(`${productName} added to cart!`, { duration: 2500 });
     } catch (error) {
-      toast.error(`Error adding to cart: ${error.message}`);
+      toast.error(`Error adding to cart: ${error.message}`, { duration: 2500 });
     }
   }, [isLoggedIn, user?._id, cart, clearCart]);
 
@@ -136,9 +135,9 @@ const useCart = (isLoggedIn, user, isVendor, isAdmin) => {
     try {
       const response = await api.customer.removeFromCart(productId);
       setCart(response.items);
-      toast.error(`Item removed from cart.`);
+      toast.error(`Item removed from cart.`, { duration: 2500 });
     } catch (error) {
-      toast.error(`Error removing from cart: ${error.message}`);
+      toast.error(`Error removing from cart: ${error.message}`, { duration: 2500 });
     }
   }, [isLoggedIn, user?._id]);
   
@@ -152,20 +151,20 @@ const useCart = (isLoggedIn, user, isVendor, isAdmin) => {
       const response = await api.customer.updateCartItem(productId, quantity);
       setCart(response.items);
     } catch (error) {
-      toast.error(`Error updating cart quantity: ${error.message}`);
+      toast.error(`Error updating cart quantity: ${error.message}`, { duration: 2500 });
     }
   }, [isLoggedIn, user?._id, removeFromCart]);
 
   const checkout = useCallback(async (orderDetails) => {
     if (!isLoggedIn || !user?._id) {
-      toast.error('Please log in to place an order.');
+      toast.error('Please log in to place an order.', { duration: 2500 });
       return null;
     }
 
     // Client-side stock validation before proceeding to backend
     for (const item of cart) {
       if (item.product.stock < item.quantity) {
-        toast.error(`"${item.name}" is out of stock or does not have enough quantity available. Please adjust your cart.`);
+        toast.error(`"${item.name}" is out of stock or does not have enough quantity available. Please adjust your cart.`, { duration: 2500 });
         return null; // Prevent checkout
       }
     }
@@ -176,10 +175,10 @@ const useCart = (isLoggedIn, user, isVendor, isAdmin) => {
     try {
       const newOrder = await api.customer.placeOrder(orderDetails);
       setCart([]); // Clear cart after successful order
-      toast.success('Order placed successfully!');
+      toast.success('Order placed successfully!', { duration: 2500 });
       return newOrder;
     } catch (error) {
-      toast.error(`Error placing order: ${error.message}`);
+      toast.error(`Error placing order: ${error.message}`, { duration: 2500 });
       return null;
     }
   }, [isLoggedIn, user?._id, cart]); // Added cart to dependencies
