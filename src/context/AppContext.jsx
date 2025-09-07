@@ -4,7 +4,7 @@ import useTheme from '../hooks/useTheme';
 import useUtils from '../hooks/useUtils';
 import useProducts from '../hooks/useProducts';
 import useStores from '../hooks/useStores';
-import useCart from '../hooks/useCart';
+import useCart from '../hooks/useCart.jsx'; // Corrected import path
 import useWishlist from '../hooks/useWishlist';
 import useOrders from '../hooks/useOrders';
 import useUsers from '../hooks/useUsers';
