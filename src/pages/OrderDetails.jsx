@@ -19,7 +19,7 @@ const formatTimestamp = (isoString) => {
 
 const OrderDetails = () => {
   const { orderId } = useParams();
-  const { orders, fetchOrders, updateOrderStatus, confirmDeliveryWithOtp } = useContext(AppContext);
+  const { orders, fetchOrders, updateOrderStatus, confirmDeliveryWithOtp, isAdmin } = useContext(AppContext); // NEW: Get isAdmin from context
   const order = orders.find(o => o._id === orderId); // Find order using _id
   const [status, setStatus] = useState(order?.orderStatus || ''); // Use orderStatus
   const [otpInput, setOtpInput] = useState('');
@@ -168,15 +168,19 @@ const OrderDetails = () => {
               </div>
               <button onClick={handleStatusUpdate} className="w-full bg-[var(--accent)] text-white py-2 px-4 rounded-lg font-medium" disabled={order.orderStatus === 'Delivered'}>Save Changes</button>
             </div>
+            {isAdmin && ( // NEW: Only show refund button if user is admin
+              <div className="bg-black/10 p-6 rounded-xl space-y-3">
+                <button 
+                  onClick={handleIssueRefund} 
+                  className="w-full bg-red-500/20 text-red-400 py-2 px-4 rounded-lg font-medium hover:bg-red-500/40 transition-colors" 
+                  aria-label={`Issue refund for order ${order._id}`}
+                  disabled={isRefundButtonDisabled}
+                >
+                  Issue Refund
+                </button>
+              </div>
+            )}
             <div className="bg-black/10 p-6 rounded-xl space-y-3">
-              <button 
-                onClick={handleIssueRefund} 
-                className="w-full bg-red-500/20 text-red-400 py-2 px-4 rounded-lg font-medium hover:bg-red-500/40 transition-colors" 
-                aria-label={`Issue refund for order ${order._id}`}
-                disabled={isRefundButtonDisabled}
-              >
-                Issue Refund
-              </button>
               <button 
                 onClick={handleDownloadInvoice} 
                 className="w-full bg-white/10 text-[var(--text)] py-2 px-4 rounded-lg font-medium hover:bg-white/20 transition-colors" 
