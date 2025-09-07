@@ -7,10 +7,10 @@ import { AppContext } from '../context/AppContext';
 import MobileNav from './MobileNav';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Package, Receipt, Store, MessageSquareText } from 'lucide-react'; // Import MessageSquareText for admin help
+import { Users, Package, Receipt, Store, MessageSquareText, MapPin } from 'lucide-react'; // Import MessageSquareText and MapPin for admin help
 
 const Header = () => {
-  const { sidebarOpen, toggleSidebar, cart, theme, toggleTheme, isVendor, isAdmin, logout } = useContext(AppContext);
+  const { sidebarOpen, toggleSidebar, cart, theme, toggleTheme, isVendor, isAdmin, logout, userPincode, setShowPincodeModal } = useContext(AppContext);
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef(null);
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -86,6 +86,18 @@ const Header = () => {
         </div>
 
         <div className="flex items-center gap-4">
+          {!isVendor && !isAdmin && (
+            // Pincode display and button for customers
+            <button
+              onClick={() => setShowPincodeModal(true)}
+              className="flex items-center gap-2 px-3 py-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-200 text-sm font-medium"
+              aria-label={userPincode ? `Current Pincode: ${userPincode}. Click to change.` : 'Set your Pincode'}
+            >
+              <MapPin size={18} className="text-[var(--accent)]" />
+              {userPincode ? userPincode : 'Set Pincode'}
+            </button>
+          )}
+
           {!isVendor && !isAdmin && (
             // Removed 'hidden md:flex' to make it visible on all screen sizes
             <div className="flex items-center gap-4 border border-white/20 rounded-full px-4 py-2">
