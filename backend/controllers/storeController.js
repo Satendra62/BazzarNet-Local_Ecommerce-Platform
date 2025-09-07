@@ -2,8 +2,6 @@ import asyncHandler from '../middleware/asyncHandler.js';
 import Store from '../models/Store.js';
 import Product from '../models/Product.js';
 
-const VALID_PINCODE = '825301'; // Define the valid pincode
-
 // @desc    Fetch all stores (public)
 // @route   GET /api/stores
 // @access  Public
@@ -13,17 +11,12 @@ const getAllStores = asyncHandler(async (req, res) => {
 
   let query = { isActive: true }; // Only active stores
 
-  // Only apply pincode filter if it's explicitly provided in the query
+  // Dynamically apply pincode filter if it's provided in the query
   if (req.query.pincode) {
-    if (req.query.pincode !== VALID_PINCODE) {
-      // If an invalid pincode is provided, return no stores
-      return res.json({ stores: [], page: 1, pages: 0, count: 0 });
-    }
-    // If valid pincode is provided, filter by it
-    query['address.pinCode'] = VALID_PINCODE;
+    query['address.pinCode'] = req.query.pincode;
   }
-  // If req.query.pincode is NOT provided, do NOT add a pincode filter to the query.
-  // This allows admins or general browsing (without a set pincode) to see all stores.
+  // If req.query.pincode is NOT provided, no pincode filter is applied,
+  // allowing general browsing to see all active stores.
 
   const keyword = req.query.search
     ? {
