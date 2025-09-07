@@ -94,7 +94,9 @@ const Header = () => {
               aria-label={userPincode ? `Current Pincode: ${userPincode}. Click to change.` : 'Set your Pincode'}
             >
               <MapPin size={18} className="text-[var(--accent)]" />
-              {userPincode ? userPincode : 'Set Pincode'}
+              <span className="hidden sm:inline"> {/* NEW: Hide text on small screens */}
+                {userPincode ? userPincode : 'Set Pincode'}
+              </span>
             </button>
           )}
 
