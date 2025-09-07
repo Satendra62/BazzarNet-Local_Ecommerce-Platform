@@ -7,7 +7,16 @@ import mongoose from 'mongoose'; // Import mongoose for ObjectId validation
 // @route   GET /api/wishlist
 // @access  Private
 const getWishlist = asyncHandler(async (req, res) => {
-  const wishlist = await Wishlist.findOne({ user: req.user._id }).populate('items.product', 'name price image stock unit');
+  // Populate items.product, and within that product, populate its 'store' field
+  const wishlist = await Wishlist.findOne({ user: req.user._id })
+    .populate({
+      path: 'items.product',
+      select: 'name price image stock unit store', // Select store field
+      populate: {
+        path: 'store', // Populate the store field within the product
+        select: 'name _id', // Select name and _id from the store
+      }
+    });
 
   if (wishlist) {
     res.json(wishlist.items);

@@ -45,9 +45,20 @@ const useCart = (isLoggedIn, user, isVendor, isAdmin) => {
 
     // Determine the actual product ID and store ID
     const actualProductId = product.product?._id || product._id;
-    const newProductStoreId = product.product?.store?._id || product.store?._id;
     const actualUnit = product.product?.unit || product.unit;
     const productName = product.product?.name || product.name;
+
+    let newProductStoreId;
+    // Check if product.store is an object (populated) or a string (ObjectId)
+    if (product.product?.store && typeof product.product.store === 'object') {
+      newProductStoreId = product.product.store._id;
+    } else if (product.product?.store && typeof product.product.store === 'string') {
+      newProductStoreId = product.product.store; // It's already the ObjectId string
+    } else if (product.store && typeof product.store === 'object') { // For direct product objects
+      newProductStoreId = product.store._id;
+    } else if (product.store && typeof product.store === 'string') { // For direct product objects where store is just ID
+      newProductStoreId = product.store;
+    }
 
     if (!newProductStoreId) {
       toast.error('Could not determine store for this product.');
