@@ -69,9 +69,9 @@ const useCart = (isLoggedIn, user, isVendor, isAdmin) => {
       if (newProductStoreId.toString() !== currentCartStoreId.toString()) {
         toast.custom((t) => (
           <div
-            className="max-w-md w-full bg-[var(--card-bg)] text-[var(--text)] shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-white/10"
+            className="max-w-md w-full bg-[var(--card-bg)] text-[var(--text)] shadow-lg rounded-lg flex ring-1 ring-white/10 pointer-events-none"
           >
-            <div className="flex-1 w-0 p-4">
+            <div className="flex-1 w-0 p-4 pointer-events-auto">
               <div className="flex items-start">
                 <div className="flex-shrink-0 pt-0.5">
                   <svg className="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" aria-hidden="true">
@@ -102,13 +102,13 @@ const useCart = (isLoggedIn, user, isVendor, isAdmin) => {
                     toast.error(`Error adding to cart: ${error.message}`, { duration: 2500 });
                   }
                 }}
-                className="w-full border-b border-white/10 p-3 flex items-center justify-center text-sm font-medium text-[var(--accent)] hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-colors"
+                className="w-full border-b border-white/10 p-3 flex items-center justify-center text-sm font-medium text-[var(--accent)] hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-colors pointer-events-auto"
               >
                 Clear Cart & Add
               </button>
               <button
                 onClick={() => toast.dismiss(t.id)}
-                className="w-full p-3 flex items-center justify-center text-sm font-medium text-gray-400 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-colors"
+                className="w-full p-3 flex items-center justify-center text-sm font-medium text-gray-400 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-colors pointer-events-auto"
               >
                 Cancel
               </button>
