@@ -11,6 +11,7 @@ const App = () => {
 
   return (
     <div className={`font-poppins min-h-screen flex flex-col transition-all duration-300 ${theme === 'dark' ? 'bg-[#07080a] text-[#E0E0E0]' : 'bg-[#E0E0E0] text-[#333]'}`}>
+      {/* Main application routing based on user role */}
       {isLoggedIn ? (
         isAdmin ? (
           <AdminRoutes />
@@ -22,7 +23,7 @@ const App = () => {
       ) : (
         <PublicRoutes />
       )}
-      {/* NEW: Render PincodeModal conditionally */}
+      {/* NEW: Render PincodeModal conditionally for logged-in customers without a set pincode */}
       {isLoggedIn && !isVendor && !isAdmin && (
         <PincodeModal isOpen={showPincodeModal} onClose={() => setShowPincodeModal(false)} />
       )}
