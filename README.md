@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # BazzarNet: Local E-commerce Platform
 
 ## Project Overview
@@ -360,3 +361,7 @@ To get the BazzarNet application up and running on your local machine, follow th
     *   **API Documentation:** Maintain up-to-date API documentation (e.g., using Swagger/OpenAPI) detailing endpoints, parameters, and responses.
     *   **Internal Code Comments:** Use JSDoc for functions, components, and hooks, and add inline comments for complex logic or non-obvious decisions.
     *   **Directory READMEs:** Consider adding brief `README.md` files in key sub-directories to explain their purpose and contents.
+=======
+# BazzarNet-Local_Ecommerce-Platform
+This is a local E-Commerce Platform based on local stores is available in your PIN code
+>>>>>>> 938e39ccd08d63abe1bbbf73065f59e371a0f765
