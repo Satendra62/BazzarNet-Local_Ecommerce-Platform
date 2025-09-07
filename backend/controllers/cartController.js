@@ -6,7 +6,16 @@ import Product from '../models/Product.js';
 // @route   GET /api/cart
 // @access  Private
 const getCart = asyncHandler(async (req, res) => {
-  const cart = await Cart.findOne({ user: req.user._id }).populate('items.product', 'name price image stock unit store'); // NEW: Populate store to check for single-store cart logic
+  // Deeply populate items.product.store to ensure store details are available
+  const cart = await Cart.findOne({ user: req.user._id })
+    .populate({
+      path: 'items.product',
+      select: 'name price image stock unit store',
+      populate: {
+        path: 'store', // Populate the 'store' field within the 'product'
+        select: 'name _id', // Select specific fields from the store
+      }
+    });
 
   if (cart) {
     res.json(cart); // Return the full cart object, including items array
@@ -66,7 +75,16 @@ const addItemToCart = asyncHandler(async (req, res) => {
   }
 
   await cart.save();
-  const updatedCart = await Cart.findById(cart._id).populate('items.product', 'name price image stock unit store'); // NEW: Populate store
+  // Re-fetch and deeply populate the updated cart to ensure consistency
+  const updatedCart = await Cart.findById(cart._id)
+    .populate({
+      path: 'items.product',
+      select: 'name price image stock unit store',
+      populate: {
+        path: 'store',
+        select: 'name _id',
+      }
+    });
   res.status(201).json(updatedCart);
 });
 
@@ -105,7 +123,16 @@ const updateCartItemQuantity = asyncHandler(async (req, res) => {
     }
     cart.items[itemIndex].quantity = quantity;
     await cart.save();
-    const updatedCart = await Cart.findById(cart._id).populate('items.product', 'name price image stock unit store'); // NEW: Populate store
+    // Re-fetch and deeply populate the updated cart to ensure consistency
+    const updatedCart = await Cart.findById(cart._id)
+      .populate({
+        path: 'items.product',
+        select: 'name price image stock unit store',
+        populate: {
+          path: 'store',
+          select: 'name _id',
+        }
+      });
     res.json(updatedCart);
   } else {
     res.status(404);
@@ -138,7 +165,16 @@ const removeItemFromCart = asyncHandler(async (req, res) => {
   }
 
   await cart.save();
-  const updatedCart = await Cart.findById(cart._id).populate('items.product', 'name price image stock unit store'); // NEW: Populate store
+  // Re-fetch and deeply populate the updated cart to ensure consistency
+  const updatedCart = await Cart.findById(cart._id)
+    .populate({
+      path: 'items.product',
+      select: 'name price image stock unit store',
+      populate: {
+        path: 'store',
+        select: 'name _id',
+      }
+    });
   res.json(updatedCart);
 });
 
