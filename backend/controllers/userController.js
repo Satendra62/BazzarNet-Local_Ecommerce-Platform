@@ -5,6 +5,7 @@ import Order from '../models/Order.js'; // Import Order model
 import Review from '../models/Review.js'; // Import Review model
 import SupportTicket from '../models/SupportTicket.js'; // NEW: Import SupportTicket model
 import { updateCustomerProfileSchema, updateVendorProfileSchema } from '../validators/userValidator.js'; // Import validators
+import { uploadFileToCloudinary } from '../controllers/uploadController.js'; // NEW: Import Cloudinary upload function
 
 // @desc    Get current user profile
 // @route   GET /api/users/me
@@ -161,15 +162,16 @@ const updateUserProfileImage = asyncHandler(async (req, res) => {
   }
 
   if (req.file) {
-    const filePath = `/uploads/${req.file.filename}`;
-    user.profileImage = filePath;
+    // Upload the image to Cloudinary using the reusable function
+    const imageUrl = await uploadFileToCloudinary(req.file.buffer, req.file.mimetype);
+    user.profileImage = imageUrl;
     await user.save();
 
     // If the user is a vendor, also update their store's logo with the same image
     if (user.role === 'vendor' && user.storeId) {
       const store = await Store.findById(user.storeId);
       if (store) {
-        store.logo = filePath;
+        store.logo = imageUrl;
         await store.save();
       }
     }
@@ -179,7 +181,7 @@ const updateUserProfileImage = asyncHandler(async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      profileImage: user.profileImage,
+      profileImage: user.profileImage, // This will now be the Cloudinary URL
       message: 'Profile image updated successfully',
     });
   } else {

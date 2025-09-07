@@ -9,42 +9,49 @@ cloudinary.config({
   api_secret: env.CLOUDINARY_API_SECRET,
 });
 
-// @desc    Upload image file to Cloudinary
+/**
+ * Reusable function to upload a file buffer to Cloudinary.
+ * @param {Buffer} fileBuffer - The file content as a Buffer.
+ * @param {string} mimetype - The MIME type of the file (e.g., 'image/jpeg').
+ * @returns {Promise<string>} A promise that resolves with the secure URL of the uploaded image.
+ */
+const uploadFileToCloudinary = (fileBuffer, mimetype) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      { folder: 'bazzarnet', resource_type: 'auto' }, // Optional: specify a folder in Cloudinary
+      (error, result) => {
+        if (error) {
+          console.error('Cloudinary upload error:', error);
+          return reject(new Error('Image upload to Cloudinary failed.'));
+        }
+        resolve(result.secure_url);
+      }
+    );
+    uploadStream.end(fileBuffer);
+  });
+};
+
+// @desc    Upload image file to Cloudinary (for /api/upload route)
 // @route   POST /api/upload
 // @access  Private
 const uploadImage = asyncHandler(async (req, res) => {
-  console.log('Backend: uploadImage controller hit.'); // NEW LOG
+  console.log('Backend: uploadImage controller hit.');
   if (!req.file) {
-    console.error('Backend: No image file provided in request.'); // NEW LOG
+    console.error('Backend: No image file provided in request.');
     res.status(400);
     throw new Error('No image file provided');
   }
 
-  // Check if the file buffer exists
   if (!req.file.buffer) {
-    console.error('Backend: File buffer is missing. Multer configuration issue?'); // NEW LOG
+    console.error('Backend: File buffer is missing. Multer configuration issue?');
     res.status(400);
     throw new Error('File buffer is missing. Ensure Multer is configured for memory storage.');
   }
 
-  console.log('Backend: Attempting to upload to Cloudinary...'); // NEW LOG
-  // Upload image to Cloudinary
-  const uploadStream = cloudinary.uploader.upload_stream(
-    { folder: 'bazzarnet' }, // Optional: specify a folder in Cloudinary
-    async (error, result) => {
-      if (error) {
-        console.error('Backend: Cloudinary upload error:', error); // EXISTING LOG, but good to re-emphasize
-        res.status(500);
-        throw new Error('Image upload to Cloudinary failed.');
-      }
-      console.log('Backend: Cloudinary upload successful. Result:', result); // NEW LOG
-      // result.secure_url contains the URL of the uploaded image
-      res.json({ message: 'Image uploaded successfully', filePath: result.secure_url });
-    }
-  );
-
-  // Pipe the buffer to the upload stream
-  uploadStream.end(req.file.buffer);
+  console.log('Backend: Attempting to upload to Cloudinary...');
+  const filePath = await uploadFileToCloudinary(req.file.buffer, req.file.mimetype);
+  console.log('Backend: Cloudinary upload successful. FilePath:', filePath);
+  res.json({ message: 'Image uploaded successfully', filePath });
 });
 
-export { uploadImage };
+export { uploadImage, uploadFileToCloudinary }; // Export both
