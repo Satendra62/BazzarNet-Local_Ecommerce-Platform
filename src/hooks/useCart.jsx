@@ -49,15 +49,11 @@ const useCart = (isLoggedIn, user, isVendor, isAdmin) => {
     const productName = product.product?.name || product.name;
 
     let newProductStoreId;
-    // Check if product.store is an object (populated) or a string (ObjectId)
-    if (product.product?.store && typeof product.product.store === 'object') {
-      newProductStoreId = product.product.store._id;
-    } else if (product.product?.store && typeof product.product.store === 'string') {
-      newProductStoreId = product.product.store; // It's already the ObjectId string
-    } else if (product.store && typeof product.store === 'object') { // For direct product objects
-      newProductStoreId = product.store._id;
-    } else if (product.store && typeof product.store === 'string') { // For direct product objects where store is just ID
-      newProductStoreId = product.store;
+    // Prioritize product.product.store (from wishlist item) then product.store (from direct product)
+    if (product.product?.store) {
+      newProductStoreId = product.product.store._id || product.product.store;
+    } else if (product.store) {
+      newProductStoreId = product.store._id || product.store;
     }
 
     if (!newProductStoreId) {
@@ -75,7 +71,7 @@ const useCart = (isLoggedIn, user, isVendor, isAdmin) => {
           <div
             className={`${
               t.visible ? 'animate-enter' : 'animate-leave'
-            } max-w-md w-full bg-[var(--card-bg)] shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
+            } max-w-md w-full bg-[var(--card-bg)] text-[var(--text)] shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-white/10`}
           >
             <div className="flex-1 w-0 p-4">
               <div className="flex items-start">
@@ -85,20 +81,21 @@ const useCart = (isLoggedIn, user, isVendor, isAdmin) => {
                   </svg>
                 </div>
                 <div className="ml-3 flex-1">
-                  <p className="text-sm font-medium text-[var(--text)]">
+                  <p className="text-sm font-medium">
                     Items from a different store detected!
                   </p>
-                  <p className="mt-1 text-sm text-gray-500">
+                  <p className="mt-1 text-sm text-gray-400">
                     Your cart already contains items from another store. Do you want to clear your cart and add "{productName}"?
                   </p>
                 </div>
               </div>
             </div>
-            <div className="flex border-l border-gray-200">
+            <div className="flex flex-col border-l border-white/10">
               <button
                 onClick={async () => {
                   toast.dismiss(t.id);
                   await clearCart();
+                  console.log('DEBUG Frontend: Cart length after clearCart:', cart.length); // NEW LOG
                   try {
                     const response = await api.customer.addToCart(actualProductId, 1, actualUnit);
                     setCart(response.items);
@@ -107,13 +104,13 @@ const useCart = (isLoggedIn, user, isVendor, isAdmin) => {
                     toast.error(`Error adding to cart: ${error.message}`);
                   }
                 }}
-                className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-[var(--accent)] hover:text-[var(--accent-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                className="w-full border-b border-white/10 p-3 flex items-center justify-center text-sm font-medium text-[var(--accent)] hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-colors"
               >
                 Clear Cart & Add
               </button>
               <button
                 onClick={() => toast.dismiss(t.id)}
-                className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full p-3 flex items-center justify-center text-sm font-medium text-gray-400 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-colors"
               >
                 Cancel
               </button>
