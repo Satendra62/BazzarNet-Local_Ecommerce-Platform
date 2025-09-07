@@ -40,11 +40,11 @@ router.route('/')
   .get(getCart)
   .post(validate(addItemToCartSchema), addItemToCart);
 
+// NEW: Place the static '/all' route BEFORE the dynamic '/:productId' route
+router.delete('/all', clearCart);
+
 router.route('/:productId')
   .put(validate(updateCartItemQuantitySchema), updateCartItemQuantity)
   .delete(removeItemFromCart);
-
-// New route to clear the entire cart
-router.delete('/all', clearCart);
 
 export default router;
