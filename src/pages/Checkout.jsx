@@ -5,8 +5,7 @@ import { AppContext } from '../context/AppContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import * as api from '../services/api'; // Import API service
-// Removed: import { useRazorpay } from 'react-razorpay'; // No longer using this hook
+import * as api from '../services/api';
 
 // Import modular components
 import CheckoutSteps from '../components/checkout/CheckoutSteps';
@@ -91,7 +90,6 @@ const Checkout = () => {
     } else if (!/^\d{6}$/.test(shippingAddress.pinCode)) {
       newErrors.pinCode = 'Pin Code must be 6 digits.';
     }
-    // Removed hardcoded pincode validation: else if (shippingAddress.pinCode !== VALID_PINCODE) { ... }
     if (!shippingAddress.mobile.trim()) {
       newErrors.mobile = 'Mobile number is required.';
     } else if (!/^\+?\d{10,15}$/.test(shippingAddress.mobile)) {
@@ -123,6 +121,18 @@ const Checkout = () => {
     } else if (currentStep === 'coupon') {
       setCurrentStep('summary');
     } else if (currentStep === 'summary') {
+      // NEW: Pincode mismatch validation before proceeding to payment
+      if (cart.length > 0 && cart[0].product?.store?.address?.pinCode) {
+        const storePincode = cart[0].product.store.address.pinCode;
+        if (shippingAddress.pinCode !== storePincode) {
+          toast.error(`Cannot proceed. The store for your cart items serves pincode ${storePincode}, but your shipping address is in ${shippingAddress.pinCode}. Please update your address or clear your cart.`, { duration: 6000 });
+          return; // Prevent moving to payment step
+        }
+      } else {
+        // This case should ideally not happen if cart is populated correctly
+        // but as a fallback, we can still allow if store pincode isn't available
+        console.warn('Could not verify store pincode for cart items. Proceeding with caution.');
+      }
       setCurrentStep('payment');
     }
   };

@@ -13,7 +13,7 @@ const getCart = asyncHandler(async (req, res) => {
       select: 'name price image stock unit store',
       populate: {
         path: 'store', // Populate the 'store' field within the 'product'
-        select: 'name _id', // Select specific fields from the store
+        select: 'name _id address.pinCode', // Select specific fields from the store, including address.pinCode
       }
     });
 
@@ -82,7 +82,7 @@ const addItemToCart = asyncHandler(async (req, res) => {
       select: 'name price image stock unit store',
       populate: {
         path: 'store',
-        select: 'name _id',
+        select: 'name _id address.pinCode', // Select specific fields from the store, including address.pinCode
       }
     });
   res.status(201).json(updatedCart);
@@ -130,7 +130,7 @@ const updateCartItemQuantity = asyncHandler(async (req, res) => {
         select: 'name price image stock unit store',
         populate: {
           path: 'store',
-          select: 'name _id',
+          select: 'name _id address.pinCode', // Select specific fields from the store, including address.pinCode
         }
       });
     res.json(updatedCart);
@@ -172,7 +172,7 @@ const removeItemFromCart = asyncHandler(async (req, res) => {
       select: 'name price image stock unit store',
       populate: {
         path: 'store',
-        select: 'name _id',
+        select: 'name _id address.pinCode', // Select specific fields from the store, including address.pinCode
       }
     });
   res.json(updatedCart);
