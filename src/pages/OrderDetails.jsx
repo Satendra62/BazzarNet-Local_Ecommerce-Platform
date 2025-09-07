@@ -39,6 +39,11 @@ const OrderDetails = () => {
   }
 
   const handleStatusUpdate = () => {
+    // Prevent manual update to 'Delivered' if OTP is present and not yet delivered
+    if (order.deliveryOtp && status === 'Delivered' && order.orderStatus !== 'Delivered') {
+      toast.error('Please confirm delivery using OTP for this order.');
+      return;
+    }
     updateOrderStatus(order._id, status);
   };
 
@@ -49,6 +54,9 @@ const OrderDetails = () => {
       setStatus('Delivered'); // Update local state to reflect change
     }
   };
+
+  // Determine if 'Delivered' option should be disabled in manual dropdown
+  const isDeliveredOptionDisabledManually = order.deliveryOtp && order.orderStatus !== 'Delivered';
 
   return (
     <section className="w-full max-w-[1200px] my-10">
@@ -102,19 +110,21 @@ const OrderDetails = () => {
 
           {/* Actions & Contact */}
           <div className="space-y-6">
-            <div className="bg-black/10 p-6 rounded-xl">
-              <h3 className="text-xl font-semibold mb-4">Confirm Delivery with OTP</h3>
-              <input
-                type="text"
-                value={otpInput}
-                onChange={(e) => setOtpInput(e.target.value)}
-                placeholder="Enter OTP from customer"
-                className="w-full p-3 rounded-lg bg-white/10 border border-black/30 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] text-[var(--text)] mb-4"
-                maxLength="6"
-                aria-label="Enter OTP for delivery confirmation"
-              />
-              <button onClick={handleConfirmDelivery} className="w-full bg-[var(--accent)] text-white py-2 px-4 rounded-lg font-medium">Confirm Delivery</button>
-            </div>
+            {order.deliveryOtp && order.orderStatus !== 'Delivered' && (
+              <div className="bg-black/10 p-6 rounded-xl">
+                <h3 className="text-xl font-semibold mb-4">Confirm Delivery with OTP</h3>
+                <input
+                  type="text"
+                  value={otpInput}
+                  onChange={(e) => setOtpInput(e.target.value)}
+                  placeholder="Enter OTP from customer"
+                  className="w-full p-3 rounded-lg bg-white/10 border border-black/30 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] text-[var(--text)] mb-4"
+                  maxLength="6"
+                  aria-label="Enter OTP for delivery confirmation"
+                />
+                <button onClick={handleConfirmDelivery} className="w-full bg-[var(--accent)] text-white py-2 px-4 rounded-lg font-medium">Confirm Delivery</button>
+              </div>
+            )}
             <div className="bg-black/10 p-6 rounded-xl">
               <h3 className="text-xl font-semibold mb-4">Update Status (Manual)</h3>
               <div className="relative mb-4">
@@ -125,18 +135,18 @@ const OrderDetails = () => {
                   onChange={(e) => setStatus(e.target.value)} 
                   className="w-full appearance-none p-3 rounded-lg bg-white/10 border border-black/30 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] pr-8"
                   aria-label="Update order status"
-                  disabled={status === 'Delivered'} // Disable if already delivered by OTP
+                  disabled={order.orderStatus === 'Delivered'} // Disable if already delivered by OTP or manually
                 >
-                  <option>Pending</option>
-                  <option>Processing</option> {/* Added Processing status */}
-                  <option>Shipped</option>
-                  <option>Delivered</option>
-                  <option>Cancelled</option>
-                  <option>Refunded</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Processing">Processing</option> {/* Added Processing status */}
+                  <option value="Shipped">Shipped</option>
+                  <option value="Delivered" disabled={isDeliveredOptionDisabledManually}>Delivered</option> {/* Disabled if OTP is required */}
+                  <option value="Cancelled">Cancelled</option>
+                  <option value="Refunded">Refunded</option>
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[var(--text)]" aria-hidden="true"><ChevronDown size={20} /></div>
               </div>
-              <button onClick={handleStatusUpdate} className="w-full bg-[var(--accent)] text-white py-2 px-4 rounded-lg font-medium" disabled={status === 'Delivered'}>Save Changes</button>
+              <button onClick={handleStatusUpdate} className="w-full bg-[var(--accent)] text-white py-2 px-4 rounded-lg font-medium" disabled={order.orderStatus === 'Delivered'}>Save Changes</button>
             </div>
             <div className="bg-black/10 p-6 rounded-xl space-y-3">
               <button onClick={() => toast.error('Refund issued!')} className="w-full bg-red-500/20 text-red-400 py-2 px-4 rounded-lg font-medium" aria-label={`Issue refund for order ${order._id}`}>Issue Refund</button>
