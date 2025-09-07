@@ -1,17 +1,5 @@
 {
   "name": "bazzarnet-backend",
-  "version": "1.0.0",
-  "description": "Backend for BazzarNet E-commerce Platform",
-  "main": "server.js",
-  "type": "module",
-  "scripts": {
-    "start": "node server.js",
-    "server": "nodemon server.js",
-    "dev": "nodemon server.js",
-    "seed": "node seeder.js",
-    "destroy": "node seeder.js -d",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --detectOpenHandles"
-  },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
