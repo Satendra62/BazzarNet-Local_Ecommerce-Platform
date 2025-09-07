@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect } => 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faShoppingCart } from '@fortawesome/free-solid-svg-icons';
 import { AppContext } from '../context/AppContext';
@@ -14,8 +14,6 @@ import ShippingAddressForm from '../components/checkout/ShippingAddressForm';
 import OrderSummary from '../components/checkout/OrderSummary';
 import CouponSection from '../components/checkout/CouponSection';
 import RazorpayPaymentForm from '../components/checkout/RazorpayPaymentForm'; // NEW: Import RazorpayPaymentForm
-
-const VALID_PINCODE = '825301'; // Define the valid pincode
 
 // Helper function to dynamically load the Razorpay script
 const loadRazorpayScript = (src) => {
@@ -92,9 +90,8 @@ const Checkout = () => {
       newErrors.pinCode = 'Pin Code is required.';
     } else if (!/^\d{6}$/.test(shippingAddress.pinCode)) {
       newErrors.pinCode = 'Pin Code must be 6 digits.';
-    } else if (shippingAddress.pinCode !== VALID_PINCODE) { // Pincode restriction
-      newErrors.pinCode = `Currently, shops are only available for pincode ${VALID_PINCODE}.`;
     }
+    // Removed hardcoded pincode validation: else if (shippingAddress.pinCode !== VALID_PINCODE) { ... }
     if (!shippingAddress.mobile.trim()) {
       newErrors.mobile = 'Mobile number is required.';
     } else if (!/^\+?\d{10,15}$/.test(shippingAddress.mobile)) {
